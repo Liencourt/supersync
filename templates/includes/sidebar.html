@@ -1,0 +1,135 @@
+<!-- Sidebar -->
+<nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse">
+    <div class="position-sticky pt-3">
+        <ul class="nav flex-column">
+            <!-- Dashboard -->
+            <li class="nav-item">
+                <a class="nav-link {% if request.resolver_match.url_name == 'home' and request.resolver_match.namespace == 'dashboard' %}active{% endif %}"
+                   href="{% url 'dashboard:home' %}">
+                    <i class="fas fa-tachometer-alt me-2"></i>
+                    Dashboard
+                </a>
+            </li>
+
+            <!-- Contratos -->
+            <li class="nav-item">
+                <a class="nav-link d-flex justify-content-between align-items-center"
+                   data-bs-toggle="collapse"
+                   href="#contratosSubmenu"
+                   role="button"
+                   aria-expanded="{% if request.resolver_match.namespace == 'contratos' %}true{% else %}false{% endif %}"
+                   aria-controls="contratosSubmenu">
+                    <span>
+                        <i class="fas fa-file-contract me-2"></i>
+                        Contratos
+                    </span>
+                    <i class="fas fa-chevron-down"></i>
+                </a>
+
+                <div class="collapse {% if request.resolver_match.namespace == 'contratos' %}show{% endif %}" id="contratosSubmenu">
+                    <ul class="nav flex-column ms-3">
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'listar' %}active{% endif %}"
+                               href="#">
+                                <i class="fas fa-list me-2"></i>
+                                Listar Contratos
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'cadastrar' %}active{% endif %}"
+                               href="#">
+                                <i class="fas fa-plus me-2"></i>
+                                Cadastrar Contrato
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'apuracao' %}active{% endif %}"
+                               href="#">
+                                <i class="fas fa-chart-bar me-2"></i>
+                                Apuração de Contratos
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </li>
+        </ul>
+
+        <!-- Divider -->
+        <hr class="my-3">
+
+        <!-- User Section -->
+        <div class="px-3">
+            <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
+                <span>Usuário</span>
+            </h6>
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'accounts:profile' %}">
+                        <i class="fas fa-user me-2"></i>
+                        Meu Perfil
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <form method="POST" action="{% url 'accounts:logout' %}" style="margin: 0;">
+                        {% csrf_token %}
+                        <button type="submit" class="nav-link text-danger" style="background: none; border: none; width: 100%; text-align: left; cursor: pointer;">
+                            <i class="fas fa-sign-out-alt me-2"></i>
+                            Sair
+                        </button>
+                    </form>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<style>
+.sidebar {
+    position: fixed;
+    top: 56px; /* Height of navbar */
+    bottom: 0;
+    left: 0;
+    z-index: 100;
+    padding: 0;
+    box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
+    overflow-y: auto;
+}
+
+.sidebar .nav-link {
+    color: #333;
+    padding: 0.75rem 1rem;
+    border-radius: 0.375rem;
+    margin: 0.125rem 0.5rem;
+    transition: all 0.2s ease;
+}
+
+.sidebar .nav-link:hover {
+    color: #0d6efd;
+    background-color: rgba(13, 110, 253, 0.1);
+}
+
+.sidebar .nav-link.active {
+    color: #fff;
+    background-color: #0d6efd;
+}
+
+.sidebar .nav-link i {
+    width: 16px;
+    text-align: center;
+}
+
+.sidebar-heading {
+    font-size: .75rem;
+    text-transform: uppercase;
+}
+
+/* Responsive adjustments */
+@media (max-width: 767.98px) {
+    .sidebar {
+        top: 0;
+        position: relative;
+        height: auto;
+    }
+}
+</style>
+

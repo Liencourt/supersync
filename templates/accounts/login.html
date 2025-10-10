@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+
+{% block title %}Login - Super Sync{% endblock %}
+
+{% block content %}
+<div class="container-fluid vh-100 d-flex align-items-center justify-content-center bg-light">
+    <div class="row w-100">
+        <div class="col-md-6 col-lg-4 mx-auto">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-primary text-white text-center py-4">
+                    <h3 class="mb-0">
+                        <i class="fas fa-file-contract me-2"></i>
+                        SUPER SYNC
+                    </h3>
+                    <p class="mb-0 mt-2">SAERJ</p>
+                </div>
+
+                <div class="card-body p-4">
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <div class="mb-3">
+                            <label for="username" class="form-label">
+                                <i class="fas fa-user me-1"></i>Usuário
+                            </label>
+                            <input type="text"
+                                   class="form-control form-control-lg"
+                                   id="username"
+                                   name="username"
+                                   placeholder="Digite seu usuário"
+                                   required>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="password" class="form-label">
+                                <i class="fas fa-lock me-1"></i>Senha
+                            </label>
+                            <input type="password"
+                                   class="form-control form-control-lg"
+                                   id="password"
+                                   name="password"
+                                   placeholder="Digite sua senha"
+                                   required>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-sign-in-alt me-2"></i>Entrar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="card-footer text-center text-muted py-3">
+                    <small>
+                        <i class="fa fa-shield"></i>
+                        Acesso seguro e protegido
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    body {
+        background: linear-gradient(135deg, #ededed 0%, #cc94ec 100%);
+    }
+
+    .card {
+        border-radius: 15px;
+        overflow: hidden;
+    }
+
+    .card-header {
+        background: linear-gradient(135deg, #141010 0%, #4c0469 100%) !important;
+    }
+
+    .form-control:focus {
+        border-color: #141010;
+        box-shadow: 0 0 0 0.2rem rgb(200, 123, 205);
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #141010 0%, #4c0469 100%);
+        border: none;
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgb(231, 86, 241);
+    }
+</style>
+{% endblock %}

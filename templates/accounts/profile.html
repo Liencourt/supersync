@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+
+{% block title %}Perfil - Sistema de Contratos{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        {% include 'includes/sidebar.html' %}
+        
+        <!-- Main Content -->
+        <div class="col-md-9 col-lg-10 ms-sm-auto px-md-4">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2">
+                    <i class="fas fa-user-cog me-2"></i>Meu Perfil
+                </h1>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-info-circle me-2"></i>Informações Pessoais
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <div class="col-sm-3">
+                                    <strong>Nome de Usuário:</strong>
+                                </div>
+                                <div class="col-sm-9">
+                                    {{ user.username }}
+                                </div>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-sm-3">
+                                    <strong>Nome:</strong>
+                                </div>
+                                <div class="col-sm-9">
+                                    {{ user.name|default:"Não informado" }}
+                                </div>
+                            </div>
+
+                            
+                            <div class="row mb-3">
+                                <div class="col-sm-3">
+                                    <strong>Último Login:</strong>
+                                </div>
+                                <div class="col-sm-9">
+                                    {{ user.last_login|date:"d/m/Y H:i"|default:"Nunca" }}
+                                </div>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-sm-3">
+                                    <strong>Data de Cadastro:</strong>
+                                </div>
+                                <div class="col-sm-9">
+                                    {{ user.date_joined|date:"d/m/Y H:i" }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-cog me-2"></i>Ações
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-grid gap-2">
+                                <button class="btn btn-outline-primary" disabled>
+                                    <i class="fas fa-edit me-2"></i>Editar Perfil
+                                </button>
+                                <button class="btn btn-outline-secondary" disabled>
+                                    <i class="fas fa-key me-2"></i>Alterar Senha
+                                </button>
+                                <hr>
+                                <a href="{% url 'accounts:logout' %}" class="btn btn-outline-danger">
+                                    <i class="fas fa-sign-out-alt me-2"></i>Sair do Sistema
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-shield-alt me-2"></i>Permissões
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-2">
+                                <span class="badge bg-{{ user.is_superuser|yesno:'danger,secondary' }}">
+                                    {% if user.is_superuser %}
+                                        <i class="fas fa-crown me-1"></i>Administrador
+                                    {% else %}
+                                        <i class="fas fa-user me-1"></i>Usuário
+                                    {% endif %}
+                                </span>
+                            </div>
+                            
+                            <div class="mb-2">
+                                <span class="badge bg-{{ user.is_staff|yesno:'info,secondary' }}">
+                                    {% if user.is_staff %}
+                                        <i class="fas fa-tools me-1"></i>Staff
+                                    {% else %}
+                                        <i class="fas fa-user-friends me-1"></i>Padrão
+                                    {% endif %}
+                                </span>
+                            </div>
+                            
+                            <div class="mb-2">
+                                <span class="badge bg-{{ user.is_active|yesno:'success,danger' }}">
+                                    {% if user.is_active %}
+                                        <i class="fas fa-check-circle me-1"></i>Ativo
+                                    {% else %}
+                                        <i class="fas fa-times-circle me-1"></i>Inativo
+                                    {% endif %}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
