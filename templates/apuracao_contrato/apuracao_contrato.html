@@ -1,0 +1,198 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Apuração de Contrato - Super Sync{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/apuracao_contrato/apuracao_contrato.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        {% include 'includes/sidebar.html' %}
+
+        <!-- Main Content -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
+            <div class="apuracao-container">
+                <div class="apuracao-header">
+                    <h1><i class="fas fa-calculator me-2"></i>Apuração de Contrato</h1>
+                    <p class="apuracao-subtitle">Sistema de apuração e controle de contratos</p>
+                </div>
+
+                <!-- Filtros -->
+                <div class="filter-section">
+                    <div class="filter-grid">
+                        <div class="filter-group">
+                            <label for="data-inicio">
+                                <i class="fas fa-calendar-alt"></i>
+                                Data Início
+                            </label>
+                            <input type="date" id="data-inicio" required>
+                        </div>
+                        <div class="filter-group">
+                            <label for="data-fim">
+                                <i class="fas fa-calendar-alt"></i>
+                                Data Fim
+                            </label>
+                            <input type="date" id="data-fim" required>
+                        </div>
+                        <div class="filter-group">
+                            <label for="contract-name-input">
+                                <i class="fas fa-file-contract"></i>
+                                Nome/Subcontrato
+                            </label>
+                            <input type="text" id="contract-name-input" placeholder="Digite o nome do contrato" required>
+                        </div>
+                    </div>
+                    <div class="filter-actions">
+                        <button id="btn-apurar" class="btn btn-primary">
+                            <i class="fas fa-search"></i>
+                            Apurar
+                        </button>
+                        <button id="open-save-modal-btn" class="btn btn-success" disabled>
+                            <i class="fas fa-save"></i>
+                            Gravar Apuração
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Estado Inicial - Mensagem de Boas-vindas -->
+                <div id="estado-inicial" class="estado-container">
+                    <div class="empty-state">
+                        <i class="fas fa-calculator empty-icon"></i>
+                        <h3>Iniciar Apuração</h3>
+                        <p>Preencha os filtros acima e clique em "Apurar" para carregar os dados do contrato.</p>
+                        <div class="empty-features">
+                            <div class="feature-item">
+                                <i class="fas fa-filter"></i>
+                                <span>Selecione o período desejado</span>
+                            </div>
+                            <div class="feature-item">
+                                <i class="fas fa-file-contract"></i>
+                                <span>Informe o nome do contrato</span>
+                            </div>
+                            <div class="feature-item">
+                                <i class="fas fa-chart-bar"></i>
+                                <span>Visualize entradas e devoluções</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Estado Carregando -->
+                <div id="estado-carregando" class="estado-container hidden">
+                    <div class="loading-state">
+                        <div class="spinner-container">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Carregando...</span>
+                            </div>
+                            <h3>Processando Apuração</h3>
+                            <p>Buscando dados do contrato...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Estado com Dados -->
+                <div id="estado-dados" class="estado-container hidden">
+                    <!-- Cards de Resumo -->
+                    <div class="summary-cards">
+                        <div class="summary-card entradas">
+                            <i class="fas fa-sign-in-alt summary-icon"></i>
+                            <h3>(+) Valor Bruto (Entradas)</h3>
+                            <p class="summary-value" id="summary-entradas">R$ 0,00</p>
+                        </div>
+                        <div class="summary-card devolucoes">
+                            <i class="fas fa-sign-out-alt summary-icon"></i>
+                            <h3>(-) Valor Devolvido</h3>
+                            <p class="summary-value" id="summary-devolucoes">R$ 0,00</p>
+                        </div>
+                        <div class="summary-card final">
+                            <i class="fas fa-balance-scale summary-icon"></i>
+                            <h3>(=) Valor Líquido do Contrato</h3>
+                            <p class="summary-value" id="summary-final">R$ 0,00</p>
+                        </div>
+                    </div>
+
+                    <!-- Abas -->
+                    <div class="tabs-container">
+                        <div class="tabs-header">
+                            <button class="tab-button active" data-tab="entradas">
+                                <i class="fas fa-sign-in-alt"></i>
+                                Notas de Entrada
+                            </button>
+                            <button class="tab-button" data-tab="devolucoes">
+                                <i class="fas fa-sign-out-alt"></i>
+                                Notas de Devolução
+                            </button>
+                        </div>
+
+                        <div id="entradas" class="tab-content active">
+                            <div class="table-container">
+                                <table class="data-table" id="table-entradas">
+                                    <!-- Dados carregados via JavaScript -->
+                                </table>
+                            </div>
+                        </div>
+
+                        <div id="devolucoes" class="tab-content">
+                            <div class="table-container">
+                                <table class="data-table" id="table-devolucoes">
+                                    <!-- Dados carregados via JavaScript -->
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Estado Vazio -->
+                <div id="estado-vazio" class="estado-container hidden">
+                    <div class="empty-state">
+                        <i class="fas fa-search empty-icon"></i>
+                        <h3>Nenhum dado encontrado</h3>
+                        <p>Não foram encontrados registros para os filtros informados.</p>
+                        <button class="btn btn-primary" onclick="voltarParaInicio()">
+                            <i class="fas fa-arrow-left me-2"></i>
+                            Voltar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- Modal de Confirmação -->
+<div id="save-modal" class="modal-overlay">
+    <div class="modal-container">
+        <div class="modal-header">
+            <h2><i class="fas fa-check-circle"></i>Finalizar Apuração</h2>
+            <button id="close-modal-btn" class="close-modal">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p>Deseja finalizar a apuração do contrato com os valores abaixo?</p>
+            <div class="modal-summary">
+                <div><span>Contrato:</span> <strong id="modal-contract-name"></strong></div>
+                <div><span>Valor Bruto (Entradas):</span> <span id="modal-summary-entradas"></span></div>
+                <div><span>Valor de Devolução:</span> <span id="modal-summary-devolucoes"></span></div>
+                <div class="final-value"><span>Valor Líquido Final:</span> <strong id="modal-summary-final"></strong></div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button id="cancel-save-btn" class="modal-button cancel-button">
+                <i class="fas fa-times"></i>
+                Cancelar
+            </button>
+            <button id="confirm-save-btn" class="modal-button confirm-button">
+                <i class="fas fa-check"></i>
+                Confirmar e Gravar
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/apuracao_contrato/apuracao_contrato.js' %}"></script>
+{% endblock %}

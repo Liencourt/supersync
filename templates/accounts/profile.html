@@ -3,126 +3,215 @@
 {% block title %}Perfil - Sistema de Contratos{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
+<div class="profile-container">
     <div class="row">
         <!-- Sidebar -->
         {% include 'includes/sidebar.html' %}
-        
-        <!-- Main Content -->
-        <div class="col-md-9 col-lg-10 ms-sm-auto px-md-4">
-            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-                <h1 class="h2">
-                    <i class="fas fa-user-cog me-2"></i>Meu Perfil
-                </h1>
-            </div>
-            
-            <div class="row">
-                <div class="col-md-8">
-                    <div class="card">
-                        <div class="card-header">
-                            <h5 class="mb-0">
-                                <i class="fas fa-info-circle me-2"></i>Informações Pessoais
-                            </h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="row mb-3">
-                                <div class="col-sm-3">
-                                    <strong>Nome de Usuário:</strong>
-                                </div>
-                                <div class="col-sm-9">
-                                    {{ user.username }}
-                                </div>
-                            </div>
-                            
-                            <div class="row mb-3">
-                                <div class="col-sm-3">
-                                    <strong>Nome:</strong>
-                                </div>
-                                <div class="col-sm-9">
-                                    {{ user.name|default:"Não informado" }}
-                                </div>
-                            </div>
 
-                            
-                            <div class="row mb-3">
-                                <div class="col-sm-3">
-                                    <strong>Último Login:</strong>
-                                </div>
-                                <div class="col-sm-9">
-                                    {{ user.last_login|date:"d/m/Y H:i"|default:"Nunca" }}
-                                </div>
-                            </div>
-                            
-                            <div class="row mb-3">
-                                <div class="col-sm-3">
-                                    <strong>Data de Cadastro:</strong>
-                                </div>
-                                <div class="col-sm-9">
-                                    {{ user.date_joined|date:"d/m/Y H:i" }}
-                                </div>
-                            </div>
-                        </div>
+        <!-- Main Content -->
+        <div class="col-md-9 col-lg-10 ms-sm-auto px-md-4 main-content">
+            <!-- Header -->
+            <div class="profile-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="header-title">
+                        <i class="fas fa-user-cog header-icon"></i>
+                        <h1>Meu Perfil</h1>
+                    </div>
+                    <div class="user-status">
+                        <span class="status-badge status-{{ user.is_active|yesno:'active,inactive' }}">
+                            <i class="fas fa-circle status-icon"></i>
+                            {{ user.is_active|yesno:'Online,Offline' }}
+                        </span>
                     </div>
                 </div>
-                
-                <div class="col-md-4">
-                    <div class="card">
-                        <div class="card-header">
-                            <h5 class="mb-0">
-                                <i class="fas fa-cog me-2"></i>Ações
-                            </h5>
+            </div>
+
+            <!-- Content -->
+            <div class="profile-content">
+                <div class="row">
+                    <!-- Informações Pessoais -->
+                    <div class="col-md-8">
+                        <div class="profile-card">
+                            <div class="card-header">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <h5>Informações Pessoais</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="info-grid">
+                                    <div class="info-item">
+                                        <div class="info-label">
+                                            <i class="fas fa-user-tag info-icon"></i>
+                                            Nome de Usuário:
+                                        </div>
+                                        <div class="info-value">{{ user.username }}</div>
+                                    </div>
+
+                                    <div class="info-item">
+                                        <div class="info-label">
+                                            <i class="fas fa-user info-icon"></i>
+                                            Nome Completo:
+                                        </div>
+                                        <div class="info-value">{{ user.name|default:"Não informado" }}</div>
+                                    </div>
+
+                                    <div class="info-item">
+                                        <div class="info-label">
+                                            <i class="fas fa-envelope info-icon"></i>
+                                            Email:
+                                        </div>
+                                        <div class="info-value">{{ user.email|default:"Não informado" }}</div>
+                                    </div>
+
+                                    <div class="info-item">
+                                        <div class="info-label">
+                                            <i class="fas fa-sign-in-alt info-icon"></i>
+                                            Último Login:
+                                        </div>
+                                        <div class="info-value">{{ user.last_login|date:"d/m/Y H:i"|default:"Nunca" }}</div>
+                                    </div>
+
+                                    <div class="info-item">
+                                        <div class="info-label">
+                                            <i class="fas fa-calendar-plus info-icon"></i>
+                                            Data de Cadastro:
+                                        </div>
+                                        <div class="info-value">{{ user.date_joined|date:"d/m/Y H:i" }}</div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="card-body">
-                            <div class="d-grid gap-2">
-                                <button class="btn btn-outline-primary" disabled>
-                                    <i class="fas fa-edit me-2"></i>Editar Perfil
-                                </button>
-                                <button class="btn btn-outline-secondary" disabled>
-                                    <i class="fas fa-key me-2"></i>Alterar Senha
-                                </button>
-                                <hr>
-                                <a href="{% url 'accounts:logout' %}" class="btn btn-outline-danger">
-                                    <i class="fas fa-sign-out-alt me-2"></i>Sair do Sistema
-                                </a>
+
+                        <!-- Estatísticas (opcional) -->
+                        <div class="profile-card mt-4">
+                            <div class="card-header">
+                                <i class="fas fa-chart-bar me-2"></i>
+                                <h5>Atividade Recente</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="activity-placeholder">
+                                    <p class="text-muted text-center mb-0">
+                                        <i class="fas fa-chart-line fa-2x mb-3"></i><br>
+                                        Estatísticas de atividade em breve
+                                    </p>
+                                </div>
                             </div>
                         </div>
                     </div>
-                    
-                    <div class="card mt-3">
-                        <div class="card-header">
-                            <h5 class="mb-0">
-                                <i class="fas fa-shield-alt me-2"></i>Permissões
-                            </h5>
+
+                    <!-- Sidebar Direita -->
+                    <div class="col-md-4">
+                        <!-- Ações -->
+                        <div class="profile-card">
+                            <div class="card-header">
+                                <i class="fas fa-cog me-2"></i>
+                                <h5>Ações</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="actions-grid">
+                                    <button class="action-btn btn-edit" disabled>
+                                        <i class="fas fa-edit action-icon"></i>
+                                        <span>Editar Perfil</span>
+                                        <small>Em breve</small>
+                                    </button>
+
+                                    <button class="action-btn btn-password" disabled>
+                                        <i class="fas fa-key action-icon"></i>
+                                        <span>Alterar Senha</span>
+                                        <small>Em breve</small>
+                                    </button>
+
+                                    <div class="action-divider"></div>
+
+
+
+                                    <form action="{% url 'accounts:logout' %}" method="post" class="d-inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="action-btn btn-logout">
+                                            <i class="fas fa-sign-out-alt action-icon"></i>
+                                            <span>Sair do Sistema</span>
+                                        </button>
+                                    </form>
+
+
+
+                                </div>
+                            </div>
                         </div>
-                        <div class="card-body">
-                            <div class="mb-2">
-                                <span class="badge bg-{{ user.is_superuser|yesno:'danger,secondary' }}">
-                                    {% if user.is_superuser %}
-                                        <i class="fas fa-crown me-1"></i>Administrador
-                                    {% else %}
-                                        <i class="fas fa-user me-1"></i>Usuário
-                                    {% endif %}
-                                </span>
+
+                        <!-- Permissões -->
+                        <div class="profile-card mt-4">
+                            <div class="card-header">
+                                <i class="fas fa-shield-alt me-2"></i>
+                                <h5>Permissões do Sistema</h5>
                             </div>
-                            
-                            <div class="mb-2">
-                                <span class="badge bg-{{ user.is_staff|yesno:'info,secondary' }}">
-                                    {% if user.is_staff %}
-                                        <i class="fas fa-tools me-1"></i>Staff
-                                    {% else %}
-                                        <i class="fas fa-user-friends me-1"></i>Padrão
-                                    {% endif %}
-                                </span>
+                            <div class="card-body">
+                                <div class="permissions-grid">
+                                    <div class="permission-item permission-{{ user.is_superuser|yesno:'admin,user' }}">
+                                        <div class="permission-icon">
+                                            <i class="fas fa-{{ user.is_superuser|yesno:'crown,user' }}"></i>
+                                        </div>
+                                        <div class="permission-info">
+                                            <div class="permission-title">
+                                                {{ user.is_superuser|yesno:'Administrador,Usuário' }}
+                                            </div>
+                                            <div class="permission-desc">
+                                                {{ user.is_superuser|yesno:'Acesso total ao sistema,Acesso limitado' }}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="permission-item permission-{{ user.is_staff|yesno:'staff,standard' }}">
+                                        <div class="permission-icon">
+                                            <i class="fas fa-{{ user.is_staff|yesno:'tools,user-friends' }}"></i>
+                                        </div>
+                                        <div class="permission-info">
+                                            <div class="permission-title">
+                                                {{ user.is_staff|yesno:'Staff,Padrão' }}
+                                            </div>
+                                            <div class="permission-desc">
+                                                {{ user.is_staff|yesno:'Privilégios administrativos,Usuário comum' }}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="permission-item permission-{{ user.is_active|yesno:'active,inactive' }}">
+                                        <div class="permission-icon">
+                                            <i class="fas fa-{{ user.is_active|yesno:'check-circle,times-circle' }}"></i>
+                                        </div>
+                                        <div class="permission-info">
+                                            <div class="permission-title">
+                                                {{ user.is_active|yesno:'Ativo,Inativo' }}
+                                            </div>
+                                            <div class="permission-desc">
+                                                {{ user.is_active|yesno:'Conta ativa no sistema,Conta desativada' }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            
-                            <div class="mb-2">
-                                <span class="badge bg-{{ user.is_active|yesno:'success,danger' }}">
-                                    {% if user.is_active %}
-                                        <i class="fas fa-check-circle me-1"></i>Ativo
-                                    {% else %}
-                                        <i class="fas fa-times-circle me-1"></i>Inativo
-                                    {% endif %}
-                                </span>
+                        </div>
+
+                        <!-- Status do Sistema -->
+                        <div class="profile-card mt-4">
+                            <div class="card-header">
+                                <i class="fas fa-server me-2"></i>
+                                <h5>Status do Sistema</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="system-status">
+                                    <div class="status-item status-online">
+                                        <i class="fas fa-circle status-dot"></i>
+                                        <span>Sistema Operacional</span>
+                                    </div>
+                                    <div class="status-item status-online">
+                                        <i class="fas fa-circle status-dot"></i>
+                                        <span>Banco de Dados</span>
+                                    </div>
+                                    <div class="status-item status-online">
+                                        <i class="fas fa-circle status-dot"></i>
+                                        <span>Serviços de Contrato</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -131,4 +220,403 @@
         </div>
     </div>
 </div>
+
+<style>
+    :root {
+        --primary-blue: #1e3a5f;
+        --primary-dark: #2c3e50;
+        --accent-blue: #3498db;
+        --light-blue: #ecf0f1;
+        --white: #ffffff;
+        --gray-light: #f5f7fa;
+        --gray-medium: #7f8c8d;
+        --gray-dark: #34495e;
+        --success: #27ae60;
+        --warning: #f39c12;
+        --danger: #e74c3c;
+        --shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        --shadow-hover: 0 4px 20px rgba(0, 0, 0, 0.12);
+    }
+
+    .profile-container {
+        background-color: #f8f9fa;
+        min-height: 100vh;
+    }
+
+    .main-content {
+        padding-top: 20px;
+        padding-bottom: 40px;
+    }
+
+    .profile-header {
+        background: var(--white);
+        padding: 1.5rem 2rem;
+        border-radius: 12px;
+        box-shadow: var(--shadow);
+        margin-bottom: 2rem;
+        border-left: 4px solid var(--accent-blue);
+    }
+
+    .header-title {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .header-title h1 {
+        font-size: 1.8rem;
+        font-weight: 600;
+        color: var(--primary-dark);
+        margin: 0;
+    }
+
+    .header-icon {
+        font-size: 1.8rem;
+        color: var(--accent-blue);
+    }
+
+    .status-badge {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .status-active {
+        background-color: rgba(39, 174, 96, 0.1);
+        color: var(--success);
+        border: 1px solid rgba(39, 174, 96, 0.2);
+    }
+
+    .status-inactive {
+        background-color: rgba(231, 76, 60, 0.1);
+        color: var(--danger);
+        border: 1px solid rgba(231, 76, 60, 0.2);
+    }
+
+    .status-icon {
+        font-size: 0.6rem;
+    }
+
+    .profile-card {
+        background: var(--white);
+        border-radius: 12px;
+        box-shadow: var(--shadow);
+        margin-bottom: 1.5rem;
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .profile-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-hover);
+    }
+
+    .profile-card .card-header {
+        background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-dark) 100%);
+        color: var(--white);
+        padding: 1.25rem 1.5rem;
+        border-bottom: none;
+        border-radius: 12px 12px 0 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .profile-card .card-header h5 {
+        margin: 0;
+        font-weight: 600;
+        font-size: 1.1rem;
+    }
+
+    .profile-card .card-body {
+        padding: 1.5rem;
+    }
+
+    .info-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 1.25rem;
+    }
+
+    .info-item {
+        display: flex;
+        align-items: flex-start;
+        padding-bottom: 1.25rem;
+        border-bottom: 1px solid var(--gray-light);
+    }
+
+    .info-item:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+
+    .info-label {
+        flex: 0 0 200px;
+        font-weight: 600;
+        color: var(--gray-dark);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .info-icon {
+        color: var(--accent-blue);
+        width: 16px;
+        font-size: 0.9rem;
+    }
+
+    .info-value {
+        flex: 1;
+        color: var(--primary-dark);
+        font-weight: 500;
+    }
+
+    .actions-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .action-btn {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 14px 16px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        background: var(--white);
+        color: var(--gray-dark);
+        text-decoration: none;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+
+    .action-btn:not([disabled]):hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .action-btn[disabled] {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+    .btn-edit {
+        border-color: var(--accent-blue);
+        color: var(--accent-blue);
+    }
+
+    .btn-password {
+        border-color: var(--warning);
+        color: var(--warning);
+    }
+
+    .btn-logout {
+        border-color: var(--danger);
+        color: var(--danger);
+        text-align: left;
+    }
+
+    .action-icon {
+        font-size: 1.1rem;
+        width: 20px;
+    }
+
+    .action-btn span {
+        flex: 1;
+        font-weight: 500;
+    }
+
+    .action-btn small {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 0.75rem;
+        opacity: 0.7;
+    }
+
+    .action-divider {
+        height: 1px;
+        background: var(--gray-light);
+        margin: 8px 0;
+    }
+
+    .permissions-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .permission-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 1rem;
+        border-radius: 8px;
+        border-left: 4px solid;
+        background: var(--gray-light);
+    }
+
+    .permission-admin {
+        border-left-color: var(--danger);
+    }
+
+    .permission-user {
+        border-left-color: var(--gray-medium);
+    }
+
+    .permission-staff {
+        border-left-color: var(--accent-blue);
+    }
+
+    .permission-standard {
+        border-left-color: var(--gray-medium);
+    }
+
+    .permission-active {
+        border-left-color: var(--success);
+    }
+
+    .permission-inactive {
+        border-left-color: var(--danger);
+    }
+
+    .permission-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        color: var(--white);
+    }
+
+    .permission-admin .permission-icon {
+        background: var(--danger);
+    }
+
+    .permission-user .permission-icon {
+        background: var(--gray-medium);
+    }
+
+    .permission-staff .permission-icon {
+        background: var(--accent-blue);
+    }
+
+    .permission-standard .permission-icon {
+        background: var(--gray-medium);
+    }
+
+    .permission-active .permission-icon {
+        background: var(--success);
+    }
+
+    .permission-inactive .permission-icon {
+        background: var(--danger);
+    }
+
+    .permission-info {
+        flex: 1;
+    }
+
+    .permission-title {
+        font-weight: 600;
+        color: var(--primary-dark);
+        margin-bottom: 2px;
+    }
+
+    .permission-desc {
+        font-size: 0.85rem;
+        color: var(--gray-medium);
+    }
+
+    .system-status {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .status-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 0;
+    }
+
+    .status-dot {
+        font-size: 0.6rem;
+    }
+
+    .status-online .status-dot {
+        color: var(--success);
+    }
+
+    .activity-placeholder {
+        padding: 2rem 1rem;
+        text-align: center;
+        color: var(--gray-medium);
+    }
+
+    /* Responsividade */
+    @media (max-width: 768px) {
+        .profile-header {
+            padding: 1rem 1.25rem;
+        }
+
+        .header-title h1 {
+            font-size: 1.5rem;
+        }
+
+        .info-item {
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .info-label {
+            flex: none;
+        }
+
+        .permission-item {
+            flex-direction: column;
+            text-align: center;
+            gap: 8px;
+        }
+
+        .action-btn small {
+            position: static;
+            transform: none;
+            margin-left: auto;
+        }
+    }
+
+    /* Animações */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .profile-card {
+        animation: fadeInUp 0.5s ease-out;
+    }
+
+    .profile-card:nth-child(2) {
+        animation-delay: 0.1s;
+    }
+
+    .profile-card:nth-child(3) {
+        animation-delay: 0.2s;
+    }
+</style>
 {% endblock %}

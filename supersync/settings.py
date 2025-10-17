@@ -13,10 +13,15 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 from pathlib import Path
 import os
 from dotenv import load_dotenv
+from google.cloud.sql.connector import Connector
 
 load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+
+GOOGLE_APPLICATION_CREDENTIALS = os.path.join(BASE_DIR, 'C:/gcp/singular-ray-422121-74ae03e8292b.json')
+
 
 
 # Quick-start development settings - unsuitable for production
@@ -34,6 +39,8 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'apuracao_contrato',
+    'gcp_services',
     'usuarios',
     'contratos',
     'accounts',
@@ -126,6 +133,10 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
+
+STATICFILES_DIRS = [
+    BASE_DIR / 'static',
+]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field

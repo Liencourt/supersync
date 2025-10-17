@@ -3,59 +3,77 @@
 {% block title %}Login - Super Sync{% endblock %}
 
 {% block content %}
-<div class="container-fluid vh-100 d-flex align-items-center justify-content-center bg-light">
-    <div class="row w-100">
-        <div class="col-md-6 col-lg-4 mx-auto">
-            <div class="card shadow-lg border-0">
-                <div class="card-header bg-primary text-white text-center py-4">
-                    <h3 class="mb-0">
-                        <i class="fas fa-file-contract me-2"></i>
-                        SUPER SYNC
-                    </h3>
-                    <p class="mb-0 mt-2">SAERJ</p>
+<div class="login-container">
+    <div class="login-background">
+        <!-- Container principal -->
+        <div class="login-wrapper">
+            <div class="login-card">
+                <!-- Cabeçalho com logo -->
+                <div class="login-header">
+                    <div class="logo-container">
+                        <i class="fas fa-file-contract logo-icon"></i>
+                        <h1 class="logo-text">SUPER SYNC</h1>
+                    </div>
+                    <p class="system-name">SAERJ</p>
+                    <p class="welcome-text">Sistema de Gestão Empresarial</p>
                 </div>
 
-                <div class="card-body p-4">
-                    <form method="post">
+                <!-- Formulário de login -->
+                <div class="login-body">
+                    <form method="post" class="login-form">
                         {% csrf_token %}
 
-                        <div class="mb-3">
+                        <div class="form-group">
                             <label for="username" class="form-label">
-                                <i class="fas fa-user me-1"></i>Usuário
+                                <i class="fas fa-user form-icon"></i>
+                                Usuário
                             </label>
                             <input type="text"
-                                   class="form-control form-control-lg"
+                                   class="form-control"
                                    id="username"
                                    name="username"
                                    placeholder="Digite seu usuário"
                                    required>
                         </div>
 
-                        <div class="mb-4">
+                        <div class="form-group">
                             <label for="password" class="form-label">
-                                <i class="fas fa-lock me-1"></i>Senha
+                                <i class="fas fa-lock form-icon"></i>
+                                Senha
                             </label>
                             <input type="password"
-                                   class="form-control form-control-lg"
+                                   class="form-control"
                                    id="password"
                                    name="password"
                                    placeholder="Digite sua senha"
                                    required>
                         </div>
 
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-primary btn-lg">
-                                <i class="fas fa-sign-in-alt me-2"></i>Entrar
-                            </button>
+                        <div class="form-options">
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="remember">
+                                <label class="form-check-label" for="remember">Lembrar-me</label>
+                            </div>
+                            <a href="#" class="forgot-password">Esqueceu a senha?</a>
                         </div>
+
+                        <button type="submit" class="login-button">
+                            <i class="fas fa-sign-in-alt button-icon"></i>
+                            Entrar
+                        </button>
                     </form>
                 </div>
 
-                <div class="card-footer text-center text-muted py-3">
-                    <small>
-                        <i class="fa fa-shield"></i>
-                        Acesso seguro e protegido
-                    </small>
+                <!-- Rodapé -->
+                <div class="login-footer">
+                    <div class="security-info">
+                        <i class="fas fa-shield-alt security-icon"></i>
+                        <span>Sistema seguro - v2.4.1</span>
+                    </div>
+                    <div class="support-info">
+                        <i class="fas fa-headset support-icon"></i>
+                        <span>Suporte: (21) 3456-7890</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -63,33 +81,292 @@
 </div>
 
 <style>
+    :root {
+        --primary-blue: #1e3a5f;
+        --primary-dark: #2c3e50;
+        --accent-blue: #3498db;
+        --light-blue: #ecf0f1;
+        --white: #ffffff;
+        --gray-light: #f5f7fa;
+        --gray-medium: #7f8c8d;
+        --gray-dark: #34495e;
+        --success: #27ae60;
+        --shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        --shadow-hover: 0 8px 25px rgba(0, 0, 0, 0.12);
+    }
+
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
     body {
-        background: linear-gradient(135deg, #ededed 0%, #cc94ec 100%);
+        font-family: 'Segoe UI', 'Roboto', Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        color: var(--primary-dark);
+        line-height: 1.6;
+        font-weight: 400;
     }
 
-    .card {
-        border-radius: 15px;
+    .login-container {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+
+    .login-background {
+        position: relative;
+        width: 100%;
+        max-width: 1200px;
+        height: 100%;
+    }
+
+    .login-wrapper {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+    }
+
+    .login-card {
+        background: var(--white);
+        border-radius: 12px;
+        box-shadow: var(--shadow);
+        width: 100%;
+        max-width: 440px;
         overflow: hidden;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border: 1px solid rgba(0, 0, 0, 0.05);
     }
 
-    .card-header {
-        background: linear-gradient(135deg, #141010 0%, #4c0469 100%) !important;
+    .login-card:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--shadow-hover);
+    }
+
+    .login-header {
+        background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-dark) 100%);
+        color: var(--white);
+        padding: 2.5rem 2rem;
+        text-align: center;
+        position: relative;
+    }
+
+    .login-header::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 4px;
+        background: var(--accent-blue);
+    }
+
+    .logo-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 12px;
+    }
+
+    .logo-icon {
+        font-size: 2.2rem;
+        margin-right: 12px;
+        color: var(--accent-blue);
+    }
+
+    .logo-text {
+        font-size: 1.8rem;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+    }
+
+    .system-name {
+        font-size: 1rem;
+        opacity: 0.9;
+        margin-bottom: 8px;
+        font-weight: 300;
+    }
+
+    .welcome-text {
+        font-size: 1rem;
+        font-weight: 400;
+        opacity: 0.8;
+        margin-top: 8px;
+    }
+
+    .login-body {
+        padding: 2.5rem 2rem;
+    }
+
+    .login-form {
+        width: 100%;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+        display: flex;
+        align-items: center;
+        font-weight: 500;
+        margin-bottom: 8px;
+        color: var(--gray-dark);
+        font-size: 0.95rem;
+    }
+
+    .form-icon {
+        margin-right: 10px;
+        color: var(--primary-blue);
+        width: 16px;
+        font-size: 0.9rem;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 14px 16px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        background-color: var(--gray-light);
+        color: var(--gray-dark);
     }
 
     .form-control:focus {
-        border-color: #141010;
-        box-shadow: 0 0 0 0.2rem rgb(200, 123, 205);
+        outline: none;
+        border-color: var(--accent-blue);
+        box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.15);
+        background-color: var(--white);
     }
 
-    .btn-primary {
-        background: linear-gradient(135deg, #141010 0%, #4c0469 100%);
+    .form-options {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        font-size: 0.9rem;
+    }
+
+    .form-check {
+        display: flex;
+        align-items: center;
+    }
+
+    .form-check-input {
+        margin-right: 8px;
+        accent-color: var(--primary-blue);
+    }
+
+    .form-check-label {
+        color: var(--gray-dark);
+    }
+
+    .forgot-password {
+        color: var(--primary-blue);
+        text-decoration: none;
+        transition: color 0.2s ease;
+        font-weight: 500;
+    }
+
+    .forgot-password:hover {
+        color: var(--accent-blue);
+        text-decoration: underline;
+    }
+
+    .login-button {
+        width: 100%;
+        padding: 14px;
+        background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-dark) 100%);
+        color: var(--white);
         border: none;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
         transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        letter-spacing: 0.5px;
     }
 
-    .btn-primary:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgb(231, 86, 241);
+    .login-button:hover {
+        background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-blue) 100%);
+        box-shadow: 0 4px 12px rgba(30, 58, 95, 0.25);
+    }
+
+    .button-icon {
+        margin-right: 10px;
+    }
+
+    .login-footer {
+        padding: 1.5rem 2rem;
+        text-align: center;
+        background-color: var(--gray-light);
+        border-top: 1px solid rgba(0, 0, 0, 0.05);
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .security-info, .support-info {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--gray-medium);
+        font-size: 0.85rem;
+    }
+
+    .security-icon {
+        margin-right: 8px;
+        color: var(--success);
+    }
+
+    .support-icon {
+        margin-right: 8px;
+        color: var(--primary-blue);
+    }
+
+    /* Responsividade */
+    @media (max-width: 576px) {
+        .login-header {
+            padding: 2rem 1.5rem;
+        }
+
+        .login-body {
+            padding: 2rem 1.5rem;
+        }
+
+        .logo-text {
+            font-size: 1.5rem;
+        }
+
+        .form-options {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .login-footer {
+            padding: 1.2rem 1.5rem;
+        }
+    }
+
+    /* Animações suaves */
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .login-card {
+        animation: fadeIn 0.5s ease-out;
     }
 </style>
 {% endblock %}

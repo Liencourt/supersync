@@ -1,0 +1,315 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Lista de Contratos - Super Sync{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/contratos/lista_contratos.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="contracts-container">
+    <div class="row">
+        <!-- Sidebar -->
+        {% include 'includes/sidebar.html' %}
+
+        <!-- Main Content -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
+            <!-- Header -->
+            <div class="page-header">
+                <div class="header-content">
+                    <div class="header-title">
+                        <i class="fas fa-file-contract header-icon"></i>
+                        <h1>Lista de Contratos</h1>
+                    </div>
+                    <div class="header-actions">
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-export">
+                                <i class="fas fa-download btn-icon"></i>
+                                Exportar
+                            </button>
+                            <a href="{% url 'contratos:listar_contratos' %}" class="btn btn-clear">
+                                <i class="fas fa-sync-alt btn-icon"></i>
+                                Limpar Filtros
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Formulário de Filtros -->
+            <div class="filter-card">
+                <div class="card-header">
+                    <div class="header-content">
+                        <i class="fas fa-filter header-icon"></i>
+                        <h5>Filtros de Busca</h5>
+                    </div>
+                    <button class="btn-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#filtrosCollapse">
+                        <i class="fas fa-chevron-down toggle-icon"></i>
+                    </button>
+                </div>
+                <div class="collapse show" id="filtrosCollapse">
+                    <div class="card-body">
+                        <form method="GET" action="{% url 'contratos:listar_contratos' %}" class="filter-form">
+                            <div class="filter-grid">
+                                <div class="filter-group">
+                                    <label for="descsub" class="form-label">
+                                        <i class="fas fa-building form-icon"></i>
+                                        SubContrato/Descrição SubContrato
+                                    </label>
+                                    <input type="text"
+                                           class="form-control"
+                                           id="descsub"
+                                           name="descsub"
+                                           placeholder="Digite o nome ou razão social"
+                                           value="{{ filtros.descsub }}">
+                                </div>
+
+                                <div class="filter-group">
+                                    <label for="desccontrato" class="form-label">
+                                        <i class="fas fa-tag form-icon"></i>
+                                        Descrição Contrato
+                                    </label>
+                                    <input type="text"
+                                           class="form-control"
+                                           id="desccontrato"
+                                           name="desccontrato"
+                                           placeholder="Digite o nome contrato"
+                                           value="{{ filtros.desccontrato }}">
+                                </div>
+                            </div>
+
+                            <div class="filter-actions">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-search btn-icon"></i>
+                                    Buscar Contratos
+                                </button>
+                                <a href="{% url 'contratos:listar_contratos' %}" class="btn btn-secondary">
+                                    <i class="fas fa-eraser btn-icon"></i>
+                                    Limpar Filtros
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Resumo de Resultados -->
+            <div class="results-summary">
+                <div class="summary-content">
+                    <i class="fas fa-chart-bar summary-icon"></i>
+                    <div class="summary-info">
+                        <span class="summary-count">{{ total }}</span>
+                        <span class="summary-text">registro(s) encontrado(s)</span>
+                        {% if filtros.descsub or filtros.desccontrato %}
+                            <span class="filter-badge">Filtrado</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Seletor de registros por página -->
+                {% if total > 0 %}
+                <div class="per-page-selector">
+                    <label for="perPageSelect">
+                        <i class="fas fa-list-ol"></i>
+                        Registros por página:
+                    </label>
+                    <select id="perPageSelect" class="form-select-sm" onchange="changePerPage(this.value)">
+                        <option value="10" {% if per_page == 10 %}selected{% endif %}>10</option>
+                        <option value="25" {% if per_page == 25 %}selected{% endif %}>25</option>
+                        <option value="50" {% if per_page == 50 %}selected{% endif %}>50</option>
+                        <option value="100" {% if per_page == 100 %}selected{% endif %}>100</option>
+                        <option value="200" {% if per_page == 200 %}selected{% endif %}>200</option>
+                    </select>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Mensagem de erro -->
+            {% if erro %}
+            <div class="alert-message alert-error">
+                <i class="fas fa-exclamation-triangle alert-icon"></i>
+                <div class="alert-content">
+                    <strong>Erro ao buscar contratos:</strong> {{ erro }}
+                </div>
+                <button type="button" class="alert-close" data-bs-dismiss="alert">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            {% endif %}
+
+            <!-- Tabela de contratos -->
+            {% if contratos %}
+            <div class="table-card">
+                <div class="card-header">
+                    <i class="fas fa-table header-icon"></i>
+                    <h5>Contratos Disponíveis</h5>
+                    <span class="page-info">
+                        Página {{ contratos.number }} de {{ contratos.paginator.num_pages }}
+                        ({{ contratos.start_index }} - {{ contratos.end_index }} de {{ total }})
+                    </span>
+                </div>
+                <div class="card-body">
+                    <div class="table-container">
+                        <table class="data-table" id="tabelaContratos">
+                            <thead>
+                                <tr>
+                                    {% for key in contratos.0.keys %}
+                                    <th>
+                                        <div class="th-content">
+                                            {{ key|title }}
+                                            <i class="fas fa-sort sort-icon"></i>
+                                        </div>
+                                    </th>
+                                    {% endfor %}
+                                    <th>
+                                        <div class="th-content">
+                                            Ações
+                                        </div>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for contrato in contratos %}
+                                <tr class="table-row">
+                                    {% for value in contrato.values %}
+                                    <td>
+                                        <div class="td-content">{{ value }}</div>
+                                    </td>
+                                    {% endfor %}
+                                    <td>
+                                        <div class="actions-cell">
+                                            <button onclick="abrirDetalhes({{ contrato.subcontrato }})"
+                                               class="btn-action btn-details"
+                                               title="Ver Detalhes">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Paginação -->
+            {% if contratos.paginator.num_pages > 1 %}
+            <div class="pagination-container">
+                <nav aria-label="Navegação de páginas">
+                    <ul class="pagination">
+                        <!-- Botão Primeira Página -->
+                        {% if contratos.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1{% if filtros.descsub %}&descsub={{ filtros.descsub }}{% endif %}{% if filtros.desccontrato %}&desccontrato={{ filtros.desccontrato }}{% endif %}&per_page={{ per_page }}" aria-label="Primeira">
+                                <i class="fas fa-angle-double-left"></i>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ contratos.previous_page_number }}{% if filtros.descsub %}&descsub={{ filtros.descsub }}{% endif %}{% if filtros.desccontrato %}&desccontrato={{ filtros.desccontrato }}{% endif %}&per_page={{ per_page }}" aria-label="Anterior">
+                                <i class="fas fa-angle-left"></i>
+                            </a>
+                        </li>
+                        {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link"><i class="fas fa-angle-double-left"></i></span>
+                        </li>
+                        <li class="page-item disabled">
+                            <span class="page-link"><i class="fas fa-angle-left"></i></span>
+                        </li>
+                        {% endif %}
+
+                        <!-- Números das páginas -->
+                        {% for num in contratos.paginator.page_range %}
+                            {% if contratos.number == num %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ num }}</span>
+                                </li>
+                            {% elif num > contratos.number|add:'-3' and num < contratos.number|add:'3' %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ num }}{% if filtros.descsub %}&descsub={{ filtros.descsub }}{% endif %}{% if filtros.desccontrato %}&desccontrato={{ filtros.desccontrato }}{% endif %}&per_page={{ per_page }}">{{ num }}</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+
+                        <!-- Botão Última Página -->
+                        {% if contratos.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ contratos.next_page_number }}{% if filtros.descsub %}&descsub={{ filtros.descsub }}{% endif %}{% if filtros.desccontrato %}&desccontrato={{ filtros.desccontrato }}{% endif %}&per_page={{ per_page }}" aria-label="Próxima">
+                                <i class="fas fa-angle-right"></i>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ contratos.paginator.num_pages }}{% if filtros.descsub %}&descsub={{ filtros.descsub }}{% endif %}{% if filtros.desccontrato %}&desccontrato={{ filtros.desccontrato }}{% endif %}&per_page={{ per_page }}" aria-label="Última">
+                                <i class="fas fa-angle-double-right"></i>
+                            </a>
+                        </li>
+                        {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link"><i class="fas fa-angle-right"></i></span>
+                        </li>
+                        <li class="page-item disabled">
+                            <span class="page-link"><i class="fas fa-angle-double-right"></i></span>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+            {% endif %}
+            {% else %}
+            <div class="empty-state">
+                <i class="fas fa-exclamation-circle empty-icon"></i>
+                <h3>Nenhum contrato encontrado</h3>
+                <p>Nenhum contrato foi encontrado com os filtros aplicados.</p>
+                <a href="{% url 'contratos:listar_contratos' %}" class="btn btn-primary">
+                    <i class="fas fa-eraser me-2"></i>
+                    Limpar Filtros
+                </a>
+            </div>
+            {% endif %}
+        </main>
+    </div>
+</div>
+
+ <!-- Modal de Detalhes do Contrato -->
+<div class="modal fade" id="detalhesModal" tabindex="-1" aria-labelledby="detalhesModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title-content">
+                    <i class="fas fa-file-contract modal-title-icon"></i>
+                    <div>
+                        <h5 class="modal-title" id="detalhesModalLabel">Detalhes do Contrato</h5>
+                        <div class="modal-subtitle" id="modalSubtitle">Carregando informações...</div>
+                    </div>
+                </div>
+                <button type="button" class="btn-close-modal" data-bs-dismiss="modal" aria-label="Fechar">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" id="detalhesConteudo">
+                <div class="loading-spinner">
+                    <div class="spinner-container">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Carregando...</span>
+                        </div>
+                        <p class="mt-3">Carregando detalhes do contrato...</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-modal-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>
+                    Fechar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/contratos/lista_contratos.js' %}"></script>
+{% endblock %}

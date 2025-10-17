@@ -52,11 +52,10 @@ def logout_view(request):
         messages.success(request, "Logout realizado com sucesso!")
         return redirect("accounts:login")
 
-    # Se for um GET, apenas redireciona para algum lugar seguro.
+
     return redirect("dashboard:home")
 
 
 @login_required
 def profile_view(request):
-    # Esta view já estava perfeita, nenhuma alteração necessária.
     return render(request, "accounts/profile.html", {'user': request.user})

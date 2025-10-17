@@ -1,52 +1,65 @@
 <!-- Sidebar -->
-<nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse">
-    <div class="position-sticky pt-3">
+<nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block sidebar collapse">
+    <div class="position-sticky pt-4">
+        <div class="sidebar-header px-3 mb-4">
+            <h6 class="sidebar-title">MENU PRINCIPAL</h6>
+        </div>
+
         <ul class="nav flex-column">
             <!-- Dashboard -->
             <li class="nav-item">
                 <a class="nav-link {% if request.resolver_match.url_name == 'home' and request.resolver_match.namespace == 'dashboard' %}active{% endif %}"
                    href="{% url 'dashboard:home' %}">
-                    <i class="fas fa-tachometer-alt me-2"></i>
-                    Dashboard
+                    <div class="nav-link-content">
+                        <i class="fas fa-tachometer-alt nav-icon"></i>
+                        <span class="nav-text">Dashboard</span>
+                    </div>
                 </a>
             </li>
 
-            <!-- Contratos -->
+            <!-- Contratos - CORRIGIDO -->
             <li class="nav-item">
-                <a class="nav-link d-flex justify-content-between align-items-center"
+                <a class="nav-link nav-link-toggle {% if request.resolver_match.namespace == 'contratos' or request.resolver_match.namespace == 'apuracao_contrato' %}active{% endif %}"
                    data-bs-toggle="collapse"
                    href="#contratosSubmenu"
                    role="button"
-                   aria-expanded="{% if request.resolver_match.namespace == 'contratos' %}true{% else %}false{% endif %}"
+                   aria-expanded="{% if request.resolver_match.namespace == 'contratos' or request.resolver_match.namespace == 'apuracao_contrato' %}true{% else %}false{% endif %}"
                    aria-controls="contratosSubmenu">
-                    <span>
-                        <i class="fas fa-file-contract me-2"></i>
-                        Contratos
-                    </span>
-                    <i class="fas fa-chevron-down"></i>
+                    <div class="nav-link-content">
+                        <i class="fas fa-file-contract nav-icon"></i>
+                        <span class="nav-text">Contratos</span>
+                        <i class="fas fa-chevron-down toggle-icon"></i>
+                    </div>
                 </a>
 
-                <div class="collapse {% if request.resolver_match.namespace == 'contratos' %}show{% endif %}" id="contratosSubmenu">
-                    <ul class="nav flex-column ms-3">
+                <div class="collapse {% if request.resolver_match.namespace == 'contratos' or request.resolver_match.namespace == 'apuracao_contrato' %}show{% endif %}"
+                     id="contratosSubmenu">
+                    <ul class="nav flex-column submenu">
                         <li class="nav-item">
-                            <a class="nav-link {% if request.resolver_match.url_name == 'listar' %}active{% endif %}"
-                               href="#">
-                                <i class="fas fa-list me-2"></i>
-                                Listar Contratos
+                            <a class="nav-link {% if request.resolver_match.url_name == 'listar_contratos' and request.resolver_match.namespace == 'contratos' %}active{% endif %}"
+                               href="{% url 'contratos:listar_contratos' %}">
+                                <div class="nav-link-content">
+                                    <i class="fas fa-list submenu-icon"></i>
+                                    <span class="nav-text">Lista de Contratos</span>
+                                </div>
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link {% if request.resolver_match.url_name == 'cadastrar' %}active{% endif %}"
                                href="#">
-                                <i class="fas fa-plus me-2"></i>
-                                Cadastrar Contrato
+                                <div class="nav-link-content">
+                                    <i class="fas fa-plus submenu-icon"></i>
+                                    <span class="nav-text">Cadastrar Contrato</span>
+                                </div>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link {% if request.resolver_match.url_name == 'apuracao' %}active{% endif %}"
-                               href="#">
-                                <i class="fas fa-chart-bar me-2"></i>
-                                Apuração de Contratos
+                            <a class="nav-link {% if request.resolver_match.url_name == 'apuracao' and request.resolver_match.namespace == 'apuracao_contrato' %}active{% endif %}"
+                               href="{% url 'apuracao_contrato:apuracao' %}">
+                                <div class="nav-link-content">
+                                    <i class="fas fa-chart-bar submenu-icon"></i>
+                                    <span class="nav-text">Apuração de Contratos</span>
+                                </div>
                             </a>
                         </li>
                     </ul>
@@ -54,73 +67,199 @@
             </li>
         </ul>
 
-        <!-- Divider -->
-        <hr class="my-3">
-
-        <!-- User Section -->
-        <div class="px-3">
-            <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
-                <span>Usuário</span>
-            </h6>
-            <ul class="nav flex-column">
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'accounts:profile' %}">
-                        <i class="fas fa-user me-2"></i>
-                        Meu Perfil
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <form method="POST" action="{% url 'accounts:logout' %}" style="margin: 0;">
-                        {% csrf_token %}
-                        <button type="submit" class="nav-link text-danger" style="background: none; border: none; width: 100%; text-align: left; cursor: pointer;">
-                            <i class="fas fa-sign-out-alt me-2"></i>
-                            Sair
-                        </button>
-                    </form>
-                </li>
-            </ul>
+        <!-- User Section (mantido igual) -->
+        <div class="sidebar-footer mt-auto">
+            <div class="user-section">
+                <h6 class="user-section-title">MINHA CONTA</h6>
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link user-link" href="{% url 'accounts:profile' %}">
+                            <div class="nav-link-content">
+                                <i class="fas fa-user-cog nav-icon"></i>
+                                <span class="nav-text">Meu Perfil</span>
+                            </div>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <form method="POST" action="{% url 'accounts:logout' %}" class="w-100">
+                            {% csrf_token %}
+                            <button type="submit" class="nav-link logout-btn w-100">
+                                <div class="nav-link-content">
+                                    <i class="fas fa-sign-out-alt nav-icon"></i>
+                                    <span class="nav-text">Sair do Sistema</span>
+                                </div>
+                            </button>
+                        </form>
+                    </li>
+                </ul>
+            </div>
         </div>
     </div>
 </nav>
 
 <style>
+
 .sidebar {
     position: fixed;
-    top: 56px; /* Height of navbar */
+    top: 76px; /* Adjusted for professional navbar height */
     bottom: 0;
     left: 0;
-    z-index: 100;
+    z-index: 99;
     padding: 0;
-    box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
+    background: linear-gradient(180deg, var(--white) 0%, var(--gray-light) 100%);
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.08);
+    border-right: 1px solid rgba(0, 0, 0, 0.05);
     overflow-y: auto;
+    transition: all 0.3s ease;
 }
 
-.sidebar .nav-link {
-    color: #333;
-    padding: 0.75rem 1rem;
-    border-radius: 0.375rem;
-    margin: 0.125rem 0.5rem;
-    transition: all 0.2s ease;
+.sidebar-header {
+    padding-top: 1rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    padding-bottom: 1rem;
 }
 
-.sidebar .nav-link:hover {
-    color: #0d6efd;
-    background-color: rgba(13, 110, 253, 0.1);
-}
-
-.sidebar .nav-link.active {
-    color: #fff;
-    background-color: #0d6efd;
-}
-
-.sidebar .nav-link i {
-    width: 16px;
-    text-align: center;
-}
-
-.sidebar-heading {
-    font-size: .75rem;
+.sidebar-title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--primary-blue);
     text-transform: uppercase;
+    letter-spacing: 1px;
+    margin: 0;
+}
+
+.sidebar-footer {
+    margin-top: 2rem;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+    padding-top: 1rem;
+}
+
+.user-section-title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--gray-medium);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin: 0 0 0.5rem 0;
+    padding: 0 1rem;
+}
+
+.nav-link {
+    color: var(--gray-dark);
+    padding: 0.75rem 1rem;
+    margin: 0.125rem 0.5rem;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    border: none;
+    background: transparent;
+    text-decoration: none;
+    display: block;
+}
+
+.nav-link:hover {
+    color: var(--primary-blue);
+    background-color: rgba(52, 152, 219, 0.1);
+    transform: translateX(4px);
+}
+
+.nav-link.active {
+    color: var(--white);
+    background: linear-gradient(135deg, var(--primary-blue) 0%, var(--accent-blue) 100%);
+    box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);
+}
+
+.nav-link-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.nav-icon {
+    width: 18px;
+    text-align: center;
+    font-size: 0.9rem;
+    color: inherit;
+}
+
+.nav-text {
+    flex: 1;
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.toggle-icon {
+    font-size: 0.7rem;
+    transition: transform 0.3s ease;
+    color: var(--gray-medium);
+}
+
+.nav-link-toggle[aria-expanded="true"] .toggle-icon {
+    transform: rotate(180deg);
+}
+
+/* Submenu Styling */
+.submenu {
+    margin-left: 0.5rem;
+    padding-left: 0.5rem;
+    border-left: 2px solid var(--light-blue);
+}
+
+.submenu .nav-link {
+    padding: 0.6rem 0.75rem;
+    margin: 0.1rem 0.25rem;
+    border-radius: 6px;
+}
+
+.submenu-icon {
+    width: 14px;
+    font-size: 0.8rem;
+    color: var(--gray-medium);
+}
+
+.submenu .nav-link.active .submenu-icon {
+    color: var(--white);
+}
+
+.submenu .nav-link:hover .submenu-icon {
+    color: var(--primary-blue);
+}
+
+/* User Section Specific Styles */
+.user-link {
+    color: var(--primary-dark);
+}
+
+.user-link:hover {
+    color: var(--primary-blue);
+}
+
+.logout-btn {
+    color: var(--danger);
+    cursor: pointer;
+    text-align: left;
+}
+
+.logout-btn:hover {
+    color: var(--white);
+    background-color: var(--danger);
+}
+
+/* Scrollbar Styling */
+.sidebar::-webkit-scrollbar {
+    width: 4px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+    background: var(--gray-light);
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+    background: var(--accent-blue);
+    border-radius: 2px;
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-blue);
 }
 
 /* Responsive adjustments */
@@ -129,7 +268,78 @@
         top: 0;
         position: relative;
         height: auto;
+        margin-top: 0;
+        box-shadow: none;
+        border-right: none;
+    }
+
+    .sidebar-header {
+        padding-top: 0.5rem;
+        padding-bottom: 0.5rem;
     }
 }
-</style>
 
+/* Animation for submenu */
+.collapse:not(.show) {
+    display: none;
+}
+
+.collapsing {
+    position: relative;
+    height: 0;
+    overflow: hidden;
+    transition: height 0.3s ease;
+}
+
+/* Ensure proper spacing when sidebar is collapsed */
+@media (min-width: 768px) {
+    .main-content {
+        margin-left: 270px; /* Width of sidebar */
+        transition: margin-left 0.3s ease;
+    }
+
+    .sidebar.collapse:not(.show) + .main-content {
+        margin-left: 0;
+    }
+}
+
+/* Active state improvements */
+.nav-link.active .nav-icon {
+    color: var(--white);
+}
+
+.nav-link:not(.active):hover .nav-icon {
+    color: var(--primary-blue);
+}
+
+/* Focus states for accessibility */
+.nav-link:focus {
+    outline: 2px solid var(--accent-blue);
+    outline-offset: 2px;
+}
+.nav-link-toggle[aria-expanded="true"] {
+    color: var(--primary-blue);
+    background-color: rgba(52, 152, 219, 0.1);
+}
+
+/* Melhorar a indicação visual do menu ativo */
+.nav-link.active .nav-link-toggle {
+    color: var(--white);
+    background: linear-gradient(135deg, var(--primary-blue) 0%, var(--accent-blue) 100%);
+}
+
+/* Prevenir que o clique nos links do submenu feche o menu */
+.submenu .nav-link {
+    pointer-events: auto;
+}
+
+/* Garantir que o submenu não feche acidentalmente */
+.collapse.show {
+    display: block;
+}
+
+/* Ajuste fino na animação */
+.collapsing {
+    transition: height 0.35s ease;
+}
+</style>
