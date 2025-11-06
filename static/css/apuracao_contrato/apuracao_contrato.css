@@ -81,21 +81,39 @@
     width: 16px;
 }
 
-.filter-group input {
+.filter-group input,
+.filter-group select {
     padding: 0.875rem 1rem;
     border: 2px solid var(--gray-light);
     border-radius: 8px;
     font-size: 0.95rem;
     transition: all 0.3s ease;
     background: var(--gray-light);
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-image: none;
 }
 
-.filter-group input:focus {
+.filter-group input:focus,
+.filter-group select:focus {
     border-color: var(--accent-blue);
     box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
     outline: none;
     background: var(--white);
 }
+
+.filter-group select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    background-size: 1em;
+}
+
+.filter-group input[type="date"]::-webkit-calendar-picker-indicator {
+    display: none;
+}
+
 
 .filter-actions {
     display: flex;
@@ -791,4 +809,64 @@
         opacity: 1;
         transform: translateY(0);
     }
+}
+
+/* Drilldown Table Styles */
+.drilldown-table .drilldown-row {
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.drilldown-table .drilldown-row:hover {
+    background-color: var(--light-blue);
+}
+
+.drilldown-table .drilldown-row.level-0 {
+    font-weight: bold;
+    background-color: #f8f9fa;
+}
+
+.drilldown-table .drilldown-row.level-1 {
+    background-color: #ffffff;
+}
+
+.drilldown-table .drilldown-row.level-2 {
+    background-color: #fdfdfd;
+    cursor: default;
+}
+
+.drilldown-table .drilldown-row.level-2:hover {
+    background-color: #f0f0f0;
+}
+
+.drilldown-table .drilldown-row td i {
+    transition: transform 0.2s ease-in-out;
+    font-size: 0.8em;
+    width: 15px;
+    text-align: center;
+}
+
+.drilldown-table .drilldown-row.expanded > td > i {
+    transform: rotate(90deg);
+}
+
+.text-end {
+    text-align: right;
+}
+
+
+/* Reset mais agressivo para o select */
+.form-select.contract-select {
+    background: var(--gray-light) !important;
+    border: 2px solid var(--gray-light) !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%236c757d'%3E%3Cpath fill-rule='evenodd' d='M4.646 6.646a.5.5 0 0 1 .708 0L8 9.293l2.646-2.647a.5.5 0 0 1 .708.708l-3 3a.5.5 0 0 1-.708 0l-3-3a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 1rem center !important;
+    background-size: 1em !important;
+}
+
+.form-select.contract-select:focus {
+    background: var(--white) !important;
+    border-color: var(--accent-blue) !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%232c5aa0'%3E%3Cpath fill-rule='evenodd' d='M4.646 6.646a.5.5 0 0 1 .708 0L8 9.293l2.646-2.647a.5.5 0 0 1 .708.708l-3 3a.5.5 0 0 1-.708 0l-3-3a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E") !important;
 }

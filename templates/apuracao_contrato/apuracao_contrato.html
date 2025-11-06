@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load currency_filters %}
 
 {% block title %}Apuração de Contrato - Super Sync{% endblock %}
 
@@ -22,96 +23,91 @@
                 </div>
 
                 <!-- Filtros -->
-                <div class="filter-section">
+                <form method="GET" action="{% url 'apuracao_contrato:apuracao' %}" class="filter-section">
                     <div class="filter-grid">
                         <div class="filter-group">
                             <label for="data-inicio">
                                 <i class="fas fa-calendar-alt"></i>
                                 Data Início
                             </label>
-                            <input type="date" id="data-inicio" required>
+                            <input type="date" id="data-inicio" name="data_inicio" value="{{ request.GET.data_inicio }}" required>
                         </div>
                         <div class="filter-group">
                             <label for="data-fim">
                                 <i class="fas fa-calendar-alt"></i>
                                 Data Fim
                             </label>
-                            <input type="date" id="data-fim" required>
+                            <input type="date" id="data-fim" name="data_fim" value="{{ request.GET.data_fim }}" required>
                         </div>
+                        
                         <div class="filter-group">
                             <label for="contract-name-input">
                                 <i class="fas fa-file-contract"></i>
                                 Nome/Subcontrato
                             </label>
-                            <input type="text" id="contract-name-input" placeholder="Digite o nome do contrato" required>
+                            <select id="contract-name-input" name="contract_name_input" class="form-select contract-select" required>
+                                <option value="">Selecione um contrato</option>
+                                {% for contract_name in contract_names %}
+                                    <option value="{{ contract_name }}" {% if request.GET.contract_name_input == contract_name %}selected{% endif %}>{{ contract_name }}</option>
+                                {% endfor %}
+                            </select>
                         </div>
                     </div>
                     <div class="filter-actions">
-                        <button id="btn-apurar" class="btn btn-primary">
+                        <button type="submit" id="btn-apurar" class="btn btn-primary">
                             <i class="fas fa-search"></i>
                             Apurar
                         </button>
-                        <button id="open-save-modal-btn" class="btn btn-success" disabled>
+                        <button id="open-save-modal-btn" class="btn btn-success" {% if not has_data %}disabled{% endif %}>
                             <i class="fas fa-save"></i>
                             Gravar Apuração
                         </button>
                     </div>
-                </div>
+                </form>
 
+                {% if error_message %}
+                    <div class="alert alert-danger" role="alert">
+                        {{ error_message }}
+                    </div>
+                {% endif %}
+
+                {% if not request.GET.data_inicio %}
                 <!-- Estado Inicial - Mensagem de Boas-vindas -->
                 <div id="estado-inicial" class="estado-container">
                     <div class="empty-state">
                         <i class="fas fa-calculator empty-icon"></i>
                         <h3>Iniciar Apuração</h3>
                         <p>Preencha os filtros acima e clique em "Apurar" para carregar os dados do contrato.</p>
-                        <div class="empty-features">
-                            <div class="feature-item">
-                                <i class="fas fa-filter"></i>
-                                <span>Selecione o período desejado</span>
-                            </div>
-                            <div class="feature-item">
-                                <i class="fas fa-file-contract"></i>
-                                <span>Informe o nome do contrato</span>
-                            </div>
-                            <div class="feature-item">
-                                <i class="fas fa-chart-bar"></i>
-                                <span>Visualize entradas e devoluções</span>
-                            </div>
-                        </div>
                     </div>
                 </div>
-
-                <!-- Estado Carregando -->
-                <div id="estado-carregando" class="estado-container hidden">
-                    <div class="loading-state">
-                        <div class="spinner-container">
-                            <div class="spinner-border text-primary" role="status">
-                                <span class="visually-hidden">Carregando...</span>
-                            </div>
-                            <h3>Processando Apuração</h3>
-                            <p>Buscando dados do contrato...</p>
-                        </div>
+                {% elif not has_data %}
+                <!-- Estado Vazio -->
+                <div id="estado-vazio" class="estado-container">
+                    <div class="empty-state">
+                        <i class="fas fa-search empty-icon"></i>
+                        <h3>Nenhum dado encontrado</h3>
+                        <p>Não foram encontrados registros para os filtros informados.</p>
                     </div>
                 </div>
-
+                {% else %}
                 <!-- Estado com Dados -->
-                <div id="estado-dados" class="estado-container hidden">
+                <div id="estado-dados" class="estado-container">
                     <!-- Cards de Resumo -->
                     <div class="summary-cards">
                         <div class="summary-card entradas">
                             <i class="fas fa-sign-in-alt summary-icon"></i>
                             <h3>(+) Valor Bruto (Entradas)</h3>
-                            <p class="summary-value" id="summary-entradas">R$ 0,00</p>
+                            <p class="summary-value" id="summary-entradas">{{ summary.entradas|br_currency }}</p>
                         </div>
                         <div class="summary-card devolucoes">
                             <i class="fas fa-sign-out-alt summary-icon"></i>
                             <h3>(-) Valor Devolvido</h3>
-                            <p class="summary-value" id="summary-devolucoes">R$ 0,00</p>
+                            <p class="summary-value" id="summary-devolucoes">{{ summary.devolucoes|br_currency }}</p>
                         </div>
                         <div class="summary-card final">
                             <i class="fas fa-balance-scale summary-icon"></i>
                             <h3>(=) Valor Líquido do Contrato</h3>
-                            <p class="summary-value" id="summary-final">R$ 0,00</p>
+                            <p class="summary-value" id="summary-final">{{ summary.final|br_currency }}</p>
                         </div>
                     </div>
 
@@ -130,34 +126,97 @@
 
                         <div id="entradas" class="tab-content active">
                             <div class="table-container">
-                                <table class="data-table" id="table-entradas">
-                                    <!-- Dados carregados via JavaScript -->
+                                <table class="data-table drilldown-table" id="table-entradas">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 5%;"><input type="checkbox" class="form-check-input master-checkbox" data-table-id="table-entradas" checked></th>
+                                            <th style="width: 35%;">Descrição</th>
+                                            <th style="width: 20%;">Fornecedor/Nota</th>
+                                            <th style="width: 15%;" class="text-end">Qtd.</th>
+                                            <th style="width: 25%;" class="text-end">Valor Bruto</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                    {% for associado, data_associado in entradas.items %}
+                                        <tr class="drilldown-row level-0" data-id="E_{{ forloop.counter }}">
+                                            <td><input type="checkbox" class="form-check-input associate-checkbox" data-associate-id="E_{{ forloop.counter }}" checked></td>
+                                            <td><i class="fas fa-chevron-right me-2"></i><strong>{{ associado }}</strong></td>
+                                            <td></td>
+                                            <td class="text-end"><strong>{{ data_associado.quantidade|floatformat:2 }}</strong></td>
+                                            <td class="text-end subtotal-entradas" data-value="{{ data_associado.total }}"><strong>{{ data_associado.total|br_currency }}</strong></td>
+                                        </tr>
+                                        {% for nota, data_nota in data_associado.notas.items %}
+                                            <tr class="drilldown-row level-1" data-parent="E_{{ forloop.parentloop.counter }}" data-id="E_{{ forloop.parentloop.counter }}_{{ forloop.counter }}">
+                                                <td><input type="checkbox" class="form-check-input note-checkbox" data-associate-id="E_{{ forloop.parentloop.counter }}" data-value="{{ data_nota.total }}" checked></td>
+                                                <td class="ps-4"><i class="fas fa-chevron-right me-2"></i>Nota Fiscal: {{ nota }}</td>
+                                                <td>{{ data_nota.data_emissao|date:"d/m/Y" }}</td>
+                                                <td class="text-end">{{ data_nota.quantidade|floatformat:2 }}</td>
+                                                <td class="text-end note-value" data-value="{{ data_nota.total }}">{{ data_nota.total|br_currency }}</td>
+                                            </tr>
+                                            {% for produto in data_nota.produtos %}
+                                                <tr class="drilldown-row level-2" data-parent="E_{{ forloop.parentloop.parentloop.counter }}_{{ forloop.parentloop.counter }}">
+                                                    <td></td>
+                                                    <td class="ps-5">{{ produto.nome }}</td>
+                                                    <td>{{ produto.fornecedor }}</td>
+                                                    <td class="text-end">{{ produto.quantidade|floatformat:2 }}</td>
+                                                    <td class="text-end">{{ produto.valor|br_currency }}</td>
+                                                </tr>
+                                            {% endfor %}
+                                        {% endfor %}
+                                    {% endfor %}
+                                    </tbody>
                                 </table>
                             </div>
                         </div>
 
                         <div id="devolucoes" class="tab-content">
                             <div class="table-container">
-                                <table class="data-table" id="table-devolucoes">
-                                    <!-- Dados carregados via JavaScript -->
+                                <table class="data-table drilldown-table" id="table-devolucoes">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 5%;"><input type="checkbox" class="form-check-input master-checkbox" data-table-id="table-devolucoes" checked></th>
+                                            <th style="width: 35%;">Descrição</th>
+                                            <th style="width: 20%;">Fornecedor/Nota</th>
+                                            <th style="width: 15%;" class="text-end">Qtd.</th>
+                                            <th style="width: 25%;" class="text-end">Valor Bruto</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                    {% for associado, data_associado in devolucoes.items %}
+                                        <tr class="drilldown-row level-0" data-id="D_{{ forloop.counter }}">
+                                            <td><input type="checkbox" class="form-check-input associate-checkbox" data-associate-id="D_{{ forloop.counter }}" checked></td>
+                                            <td><i class="fas fa-chevron-right me-2"></i><strong>{{ associado }}</strong></td>
+                                            <td></td>
+                                            <td class="text-end"><strong>{{ data_associado.quantidade|floatformat:2 }}</strong></td>
+                                            <td class="text-end subtotal-devolucoes" data-value="{{ data_associado.total }}"><strong>{{ data_associado.total|br_currency }}</strong></td>
+                                        </tr>
+                                        {% for nota, data_nota in data_associado.notas.items %}
+                                            <tr class="drilldown-row level-1" data-parent="D_{{ forloop.parentloop.counter }}" data-id="D_{{ forloop.parentloop.counter }}_{{ forloop.counter }}">
+                                                <td><input type="checkbox" class="form-check-input note-checkbox" data-associate-id="D_{{ forloop.parentloop.counter }}" data-value="{{ data_nota.total }}" checked></td>
+                                                <td class="ps-4"><i class="fas fa-chevron-right me-2"></i>Nota Fiscal: {{ nota }}</td>
+                                                <td>{{ data_nota.data_emissao|date:"d/m/Y" }}</td>
+                                                <td class="text-end">{{ data_nota.quantidade|floatformat:2 }}</td>
+                                                <td class="text-end note-value" data-value="{{ data_nota.total }}">{{ data_nota.total|br_currency }}</td>
+                                            </tr>
+                                            {% for produto in data_nota.produtos %}
+                                                <tr class="drilldown-row level-2" data-parent="D_{{ forloop.parentloop.parentloop.counter }}_{{ forloop.parentloop.counter }}">
+                                                    <td></td>
+                                                    <td class="ps-5">{{ produto.nome }}</td>
+                                                    <td>{{ produto.fornecedor }}</td>
+                                                    <td class="text-end">{{ produto.quantidade|floatformat:2 }}</td>
+                                                    <td class="text-end">{{ produto.valor|br_currency }}</td>
+                                                </tr>
+                                            {% endfor %}
+                                        {% endfor %}
+                                    {% endfor %}
+                                    </tbody>
                                 </table>
                             </div>
                         </div>
                     </div>
                 </div>
+                {% endif %}
 
-                <!-- Estado Vazio -->
-                <div id="estado-vazio" class="estado-container hidden">
-                    <div class="empty-state">
-                        <i class="fas fa-search empty-icon"></i>
-                        <h3>Nenhum dado encontrado</h3>
-                        <p>Não foram encontrados registros para os filtros informados.</p>
-                        <button class="btn btn-primary" onclick="voltarParaInicio()">
-                            <i class="fas fa-arrow-left me-2"></i>
-                            Voltar
-                        </button>
-                    </div>
-                </div>
             </div>
         </main>
     </div>
@@ -173,10 +232,10 @@
         <div class="modal-body">
             <p>Deseja finalizar a apuração do contrato com os valores abaixo?</p>
             <div class="modal-summary">
-                <div><span>Contrato:</span> <strong id="modal-contract-name"></strong></div>
-                <div><span>Valor Bruto (Entradas):</span> <span id="modal-summary-entradas"></span></div>
-                <div><span>Valor de Devolução:</span> <span id="modal-summary-devolucoes"></span></div>
-                <div class="final-value"><span>Valor Líquido Final:</span> <strong id="modal-summary-final"></strong></div>
+                <div><span>Contrato:</span> <strong id="modal-contract-name">{{ request.GET.contract_name_input }}</strong></div>
+                <div><span>Valor Bruto (Entradas):</span> <span id="modal-summary-entradas">{{ summary.entradas|br_currency }}</span></div>
+                <div><span>Valor de Devolução:</span> <span id="modal-summary-devolucoes">{{ summary.devolucoes|br_currency }}</span></div>
+                <div class="final-value"><span>Valor Líquido Final:</span> <strong id="modal-summary-final">{{ summary.final|br_currency }}</strong></div>
             </div>
         </div>
         <div class="modal-footer">
