@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from gcp_services.services import bigquery_client
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal
 
 @login_required
 def apuracao(request):
