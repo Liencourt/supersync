@@ -110,9 +110,7 @@
     background-size: 1em;
 }
 
-.filter-group input[type="date"]::-webkit-calendar-picker-indicator {
-    display: none;
-}
+/* O indicador do calendário de data agora é exibido nativamente. */
 
 
 .filter-actions {

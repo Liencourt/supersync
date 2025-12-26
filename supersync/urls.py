@@ -24,6 +24,7 @@ urlpatterns = [
     path('dashboard/', include('dashboard.urls')),
     path('contratos/', include('contratos.urls')),
     path('apuracao/', include('apuracao_contrato.urls')),
+    path('apuracao_grade/', include('apuracao_grade.urls')),
     # Redireciona a URL raiz para a página de login
     path('', RedirectView.as_view(url='/accounts/login/', permanent=False)),
 ]

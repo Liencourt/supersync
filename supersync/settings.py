@@ -14,6 +14,7 @@ from pathlib import Path
 import os
 from dotenv import load_dotenv
 from google.cloud.sql.connector import Connector
+import bcrypt
 
 load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -36,9 +37,18 @@ DEBUG = True
 ALLOWED_HOSTS = []
 
 
+PASSWORD_HASHERS = [
+    'django.contrib.auth.hashers.BCryptPasswordHasher', 
+    'django.contrib.auth.hashers.PBKDF2PasswordHasher',
+    'django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher',
+    'django.contrib.auth.hashers.Argon2PasswordHasher',
+]
+
 # Application definition
 
 INSTALLED_APPS = [
+    'utils',
+    'apuracao_grade',
     'apuracao_contrato',
     'gcp_services',
     'usuarios',
@@ -148,6 +158,6 @@ AUTH_USER_MODEL = 'usuarios.SyncUsuario'
 
 # settings.py
 AUTHENTICATION_BACKENDS = [
-    'usuarios.backends.PlainTextAuthBackend',
+    #'usuarios.backends.PlainTextAuthBackend',
     'django.contrib.auth.backends.ModelBackend', # Mantém o backend padrão como fallback
 ]

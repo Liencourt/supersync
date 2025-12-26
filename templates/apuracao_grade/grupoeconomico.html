@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Grupo Econômico</title>
+</head>
+<body>
+    <h1>Registros do Grupo Econômico</h1>
+    {% if erro %}
+        <p style="color: red;">{{ erro }}</p>
+    {% elif registros_apuracao %}
+        <table border="1">
+            <thead>
+                <tr>
+                    {% for key in registros_apuracao.0.keys %}
+                        <th>{{ key }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for registro in registros_apuracao %}
+                    <tr>
+                        {% for value in registro.values %}
+                            <td>{{ value }}</td>
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>Nenhum registro encontrado.</p>
+    {% endif %}
+</body>
+</html>

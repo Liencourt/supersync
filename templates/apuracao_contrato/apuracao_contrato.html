@@ -45,7 +45,7 @@
                                 <i class="fas fa-file-contract"></i>
                                 Nome/Subcontrato
                             </label>
-                            <select id="contract-name-input" name="contract_name_input" class="form-select contract-select" required>
+                            <select id="contract-name-input" name="contract_name_input" class="contract-select" required>
                                 <option value="">Selecione um contrato</option>
                                 {% for contract_name in contract_names %}
                                     <option value="{{ contract_name }}" {% if request.GET.contract_name_input == contract_name %}selected{% endif %}>{{ contract_name }}</option>
