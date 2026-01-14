@@ -1,0 +1,424 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Nova Grade de Compra{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="header-title mb-3">Nova Grade de Compra</h4>
+                
+                <form method="post" id="form-grade">
+                    {% csrf_token %}
+                    
+                    {{ form.grupos_json }}
+
+                    <div class="row">
+                        <div class="col-md-5 border-end">
+                            <h5 class="text-muted mb-3">Dados Gerais</h5>
+                            <div class="mb-3">
+                                <label class="form-label">{{ form.evento.label }}</label>
+                                <div class="input-group">
+                                    {{ form.evento }}
+                                    
+                                    <button class="btn btn-outline-primary" type="button" data-bs-toggle="modal" data-bs-target="#modalNovoEvento" title="Cadastrar Novo Evento">
+                                        <i class="ti ti-plus"></i>
+                                    </button>
+                                </div>
+                                <div class="form-text text-muted">{{ form.evento.help_text }}</div>
+                                {{ form.evento.errors }}
+                            </div>
+                           <div class="mb-3">
+                                <label class="form-label">{{ form.comprador.label }}</label>
+                                {{ form.comprador }}
+                                <div class="text-danger small">{{ form.comprador.errors }}</div>
+                            </div>
+                            <div class="row">
+                                <div class="col-6 mb-3">
+                                    <label class="form-label">{{ form.data_inicio.label }}</label>
+                                    {{ form.data_inicio }}
+                                </div>
+                                <div class="col-6 mb-3">
+                                    <label class="form-label">{{ form.data_fim.label }}</label>
+                                    {{ form.data_fim }}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-7 ps-md-4">
+                            <div class="alert alert-light border shadow-sm" role="alert">
+                                <h5 class="alert-heading text-primary"><i class="ti ti-building-store me-2"></i>Participantes da Grade</h5>
+                                <p class="mb-0 text-muted font-13">
+                                    Busque os fornecedores ou grupos econômicos que farão parte desta negociação.
+                                    Você pode adicionar múltiplos CNPJs/Grupos.
+                                </p>
+                            </div>
+                            
+                            <div class="mb-3 position-relative">
+                                <label class="form-label fw-bold">Buscar e Adicionar</label>
+                                
+                                <div class="input-group input-group-lg">
+                                    <span class="input-group-text bg-white text-muted border-end-0">
+                                        <i class="ti ti-search"></i>
+                                    </span>
+                                    
+                                    <input type="text" id="id_busca_grupo" class="form-control border-start-0" placeholder="Digite Nome ou CNPJ...">
+
+                                    <button class="btn btn-primary" type="button" id="btn-buscar">
+                                        Buscar
+                                    </button>
+                                </div>
+                                <div id="lista-resultados" class="list-group mt-1 shadow position-absolute w-100 bg-white" 
+                                    style="z-index: 1050; display: none; max-height: 300px; overflow-y: auto; border: 1px solid #eee;">
+                                </div>
+                            </div>
+                                
+                                <div id="lista-resultados" class="list-group mt-1 shadow position-absolute w-100 bg-white" 
+                                    style="z-index: 1050; display: none; max-height: 300px; overflow-y: auto; border: 1px solid #eee;">
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label text-success fw-bold">Grupos Adicionados:</label>
+                                
+                                <div class="card border mb-0">
+                                    <div class="card-body p-0">
+                                        <div class="table-responsive">
+                                            <table class="table table-centered table-hover mb-0" id="tabela-selecionados">
+                                                <thead class="table-light">
+                                                    <tr>
+                                                        <th style="width: 80px;">ID</th>
+                                                        <th>Nome do Grupo / Fornecedor</th>
+                                                        <th style="width: 50px;"></th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr id="msg-vazio">
+                                                        <td colspan="3" class="text-center py-4 text-muted">
+                                                            <i class="ti ti-basket-off fs-1 mb-2 d-block opacity-25"></i>
+                                                            Nenhum grupo selecionado ainda.
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="text-danger small mt-1">{{ form.busca_grupo.errors }}</div>
+                            </div>
+                            
+                            <div class="mb-3 mt-4">
+                                <label class="form-label">{{ form.observacoes.label }}</label>
+                                {{ form.observacoes }}
+                            </div>
+                        </div>
+                        
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+                        <a href="{% url 'apuracao_grade:grade-list' %}" class="btn btn-light">Cancelar</a>
+                        <button type="submit" class="btn btn-primary px-4">Salvar e Avançar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="modalNovoEvento" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-light">
+                <h5 class="modal-title">Novo Evento Rápido</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formNovoEventoRapido">
+                    <div class="mb-3">
+                        <label for="modal_descricao" class="form-label">Nome do Evento</label>
+                        <input type="text" class="form-control" id="modal_descricao" name="descricao" required placeholder="Ex: Páscoa 2026">
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-6 mb-3">
+                            <label for="modal_data_inicio" class="form-label">Data Início</label>
+                            <input type="date" class="form-control" id="modal_data_inicio" name="data_inicio" required>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <label for="modal_data_fim" class="form-label">Data Fim</label>
+                            <input type="date" class="form-control" id="modal_data_fim" name="data_fim" required>
+                        </div>
+                    </div>
+                    
+                    <div id="msgErroEvento" class="alert alert-danger d-none p-2 mt-2"></div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="salvarEventoRapido()">Salvar Evento</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_javascript %}
+<script>
+    // Garante que a função esteja no escopo global para o botão HTML acessar
+    window.salvarEventoRapido = function() {
+        console.log("Iniciando salvamento de evento..."); // Para debug no F12
+
+        const btn = document.querySelector('#modalNovoEvento .btn-primary');
+        const originalText = btn.innerHTML;
+        const msgErro = document.getElementById('msgErroEvento');
+        
+        // Pega valores
+        const payload = {
+            descricao: document.getElementById('modal_descricao').value,
+            data_inicio: document.getElementById('modal_data_inicio').value,
+            data_fim: document.getElementById('modal_data_fim').value
+        };
+
+        // Validação simples
+        if(!payload.descricao || !payload.data_inicio || !payload.data_fim) {
+            alert("Por favor, preencha todos os campos do evento.");
+            return;
+        }
+
+        // Trava o botão
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Salvando...';
+        msgErro.classList.add('d-none');
+
+        // Envia para o Backend
+        fetch("{% url 'apuracao_grade:api-criar-evento-modal' %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify(payload)
+        })
+        .then(r => r.json())
+        .then(data => {
+            console.log("Resposta:", data);
+            
+            if(data.status === 'ok') {
+                // 1. Adiciona a nova opção ao Select de Evento
+                // Tenta achar pelo ID padrão do Django (id_evento) ou pelo name
+                const selectEvento = document.getElementById('id_evento') || document.querySelector('select[name="evento"]');
+                
+                if (selectEvento) {
+                    const novaOpcao = new Option(data.text, data.id, true, true);
+                    selectEvento.add(novaOpcao, undefined);
+                    // Dispara evento change caso tenha algum listener atrelado
+                    selectEvento.dispatchEvent(new Event('change'));
+                }
+                
+                // 2. Fecha o modal (Usando jQuery ou Bootstrap nativo)
+                const modalEl = document.getElementById('modalNovoEvento');
+                
+                // Tenta fechar via Bootstrap 5
+                try {
+                    const modalInstance = bootstrap.Modal.getInstance(modalEl);
+                    if (modalInstance) {
+                        modalInstance.hide();
+                    } else {
+                        // Fallback: remove classes manualmente se a instância não for achada
+                        modalEl.classList.remove('show');
+                        modalEl.style.display = 'none';
+                        document.body.classList.remove('modal-open');
+                        const backdrop = document.querySelector('.modal-backdrop');
+                        if(backdrop) backdrop.remove();
+                    }
+                } catch(e) {
+                    // Fallback jQuery (se o tema usar)
+                    if(window.jQuery) {
+                        window.jQuery('#modalNovoEvento').modal('hide');
+                    }
+                }
+
+                // 3. Limpa o formulário
+                document.getElementById('formNovoEventoRapido').reset();
+                
+            } else {
+                // Tratamento de Erros
+                let errosHtml = "<strong>Erro ao salvar:</strong><br>";
+                if (data.errors) {
+                    for (const [campo, msgs] of Object.entries(data.errors)) {
+                        errosHtml += `- ${campo}: ${msgs.join(', ')}<br>`;
+                    }
+                } else {
+                    errosHtml += data.message || "Erro desconhecido.";
+                }
+                
+                msgErro.innerHTML = errosHtml;
+                msgErro.classList.remove('d-none');
+            }
+        })
+        .catch(err => {
+            console.error("Erro Fetch:", err);
+            msgErro.innerHTML = "Erro de conexão com o servidor. Verifique o console.";
+            msgErro.classList.remove('d-none');
+        })
+        .finally(() => {
+            // Destrava o botão
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        });
+    };
+
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log("Script de Grade carregado!"); // Debug
+
+        // Seleção dos elementos
+        const btnBuscar = document.getElementById('btn-buscar');
+        
+        // Agora, como colocamos o input manual no HTML, esse ID COM CERTEZA existe
+        const inputBusca = document.getElementById('id_busca_grupo'); 
+        
+        // Verificação defensiva (IMPORTANTE)
+        // Se o Django nomear o campo oculto diferente de 'id_grupos_json', precisamos achar ele
+        let inputHiddenJson = document.getElementById('id_grupos_json');
+        if (!inputHiddenJson) {
+            // Tenta achar pelo name se o ID falhar
+            inputHiddenJson = document.querySelector('input[name="grupos_json"]');
+        }
+
+        const listaResultados = document.getElementById('lista-resultados');
+        const tabela = document.getElementById('tabela-selecionados').getElementsByTagName('tbody')[0];
+        
+        // Se algum elemento essencial faltar, avisa no console e para (evita travar a página toda)
+        if (!btnBuscar || !inputBusca || !inputHiddenJson) {
+            console.error("ERRO CRÍTICO: Elementos HTML não encontrados.", {
+                btn: btnBuscar, input: inputBusca, json: inputHiddenJson
+            });
+            return;
+        }
+
+        let gruposSelecionados = [];
+
+        // Inicializa dados existentes
+        try {
+            if(inputHiddenJson.value) {
+                gruposSelecionados = JSON.parse(inputHiddenJson.value);
+                renderizarTabela();
+            }
+        } catch(e) { console.error("Erro JSON inicial", e); }
+
+        // --- CLICK DO BOTÃO ---
+        btnBuscar.addEventListener('click', function() {
+            const termo = inputBusca.value;
+            console.log("Buscando por:", termo); // Debug
+
+            if (termo.length < 3) {
+                alert("Digite pelo menos 3 caracteres.");
+                return;
+            }
+
+            // Feedback visual
+            const originalBtn = btnBuscar.innerHTML;
+            btnBuscar.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+            btnBuscar.disabled = true;
+
+            const url = "{% url 'apuracao_grade:api-buscar-fornecedores' %}?term=" + encodeURIComponent(termo);
+
+            fetch(url)
+                .then(r => r.json())
+                .then(data => {
+                    console.log("Resultados:", data); // Debug
+                    listaResultados.innerHTML = '';
+                    listaResultados.style.display = 'block';
+
+                    if (!data || data.length === 0) {
+                        listaResultados.innerHTML = '<div class="list-group-item text-muted">Nenhum resultado.</div>';
+                    } else {
+                        data.forEach(item => {
+                            const a = document.createElement('a');
+                            a.href = 'javascript:void(0);';
+                            a.className = 'list-group-item list-group-item-action';                            
+                            a.innerHTML = `
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong>${item.text}</strong><br>
+                                        <small class="text-muted">ID: ${item.id} - ${item.razao || ''}</small>
+                                    </div>
+                                    <i class="ti ti-plus text-primary"></i>
+                                </div>
+                            `;
+                            
+                            a.onclick = function() {
+                                adicionarGrupo(item);
+                                listaResultados.style.display = 'none';
+                                inputBusca.value = '';
+                            };
+                            listaResultados.appendChild(a);
+                        });
+                    }
+                })
+                .catch(err => {
+                    console.error("Erro no Fetch:", err);
+                    alert("Erro ao comunicar com o servidor. Verifique o console.");
+                })
+                .finally(() => {
+                    btnBuscar.innerHTML = originalBtn; // Restaura texto original (importante se era icone ou texto)
+                    if(btnBuscar.innerHTML === '') btnBuscar.innerText = 'Buscar'; // Fallback
+                    btnBuscar.disabled = false;
+                });
+        });
+
+        // Fechar ao clicar fora
+        document.addEventListener('click', function(e) {
+            if (listaResultados.style.display === 'block' && 
+                !listaResultados.contains(e.target) && 
+                e.target !== inputBusca && 
+                e.target !== btnBuscar) {
+                listaResultados.style.display = 'none';
+            }
+        });
+
+        function adicionarGrupo(item) {
+            if (gruposSelecionados.find(g => g.id == item.id)) {
+                alert("Já adicionado!");
+                return;
+            }
+            gruposSelecionados.push({ id: item.id, nome: item.text });
+            atualizarJson();
+            renderizarTabela();
+        }
+
+        window.removerGrupo = function(id) {
+            gruposSelecionados = gruposSelecionados.filter(g => g.id != id);
+            atualizarJson();
+            renderizarTabela();
+        };
+
+        function renderizarTabela() {
+            tabela.innerHTML = '';
+            if (gruposSelecionados.length === 0) {
+                tabela.innerHTML = `<tr id="msg-vazio"><td colspan="3" class="text-center py-4 text-muted">Nenhum selecionado.</td></tr>`;
+                return;
+            }
+            gruposSelecionados.forEach(g => {
+                tabela.innerHTML += `
+                    <tr>
+                        <td>#${g.id}</td>
+                        <td class="fw-bold">${g.nome}</td>
+                        <td class="text-end">
+                            <button type="button" class="btn btn-sm btn-light text-danger" onclick="removerGrupo('${g.id}')">
+                                <i class="ti ti-trash"></i>
+                            </button>
+                        </td>
+                    </tr>`;
+            });
+        }
+
+        function atualizarJson() {
+            if(inputHiddenJson) inputHiddenJson.value = JSON.stringify(gruposSelecionados);
+        }
+    });
+    
+
+</script>
+{% endblock %}

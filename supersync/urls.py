@@ -27,4 +27,5 @@ urlpatterns = [
     path('apuracao_grade/', include('apuracao_grade.urls')),
     # Redireciona a URL raiz para a página de login
     path('', RedirectView.as_view(url='/accounts/login/', permanent=False)),
+    path('usuarios/', include('usuarios.urls')),
 ]

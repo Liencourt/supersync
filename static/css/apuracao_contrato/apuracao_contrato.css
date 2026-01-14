@@ -603,23 +603,6 @@
         flex-direction: column;
     }
 }
-/* Ajustes para compatibilidade com Sidebar */
-.container-fluid {
-    padding: 0;
-}
-
-.main-content {
-    padding-top: 1rem;
-    padding-bottom: 2rem;
-    min-height: 100vh;
-}
-
-/* Ajustes específicos para o layout com sidebar */
-.apuracao-container {
-    background: transparent;
-    padding: 0;
-    min-height: auto;
-}
 
 /* Garantir que os cards não fiquem muito largos */
 .summary-cards {

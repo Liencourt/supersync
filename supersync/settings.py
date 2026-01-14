@@ -15,13 +15,29 @@ import os
 from dotenv import load_dotenv
 from google.cloud.sql.connector import Connector
 import bcrypt
+import dj_database_url
 
 load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-GOOGLE_APPLICATION_CREDENTIALS = os.path.join(BASE_DIR, 'C:/gcp/singular-ray-422121-74ae03e8292b.json')
+
+caminho_credenciais = os.path.join(BASE_DIR, 'credenciais.json')
+
+# Lógica Blindada:
+if os.path.exists(caminho_credenciais):
+    
+    os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = caminho_credenciais
+    
+    
+    GOOGLE_APPLICATION_CREDENTIALS = caminho_credenciais
+    
+    print(f"✅ Modo Local: Credenciais carregadas de {caminho_credenciais}")
+else:
+
+    GOOGLE_APPLICATION_CREDENTIALS = None 
+    print("☁️ Modo Nuvem: Usando autenticação nativa do Google Cloud (ADC).")
 
 
 
@@ -34,7 +50,7 @@ SECRET_KEY = 'django-insecure-lo243ap+oyed(k!a*^#u!sv-bs@u3-yt^c=adyx$4^!($27i^#
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 PASSWORD_HASHERS = [
@@ -65,6 +81,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -97,16 +114,17 @@ WSGI_APPLICATION = 'supersync.wsgi.application'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 DATABASES = {
+    # 1. Padrão: SQLite (Funciona no seu PC e no Cloud Run sem configurar nada extra)
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('DB_NAME'),
-        'USER': os.getenv('USER'),
-        'PASSWORD': os.getenv('PASSWORD'),
-        'HOST': 'localhost',
-        'PORT': os.getenv('PORT'),
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
 
+db_from_env = dj_database_url.config(conn_max_age=600)
+DATABASES['default'].update(db_from_env)
+
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -142,7 +160,9 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 STATICFILES_DIRS = [
     BASE_DIR / 'static',

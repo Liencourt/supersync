@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Novo Usuário | Super Sync{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="page-title-box">
+            <h4 class="page-title">Cadastro de Usuário</h4>
+        </div>
+        
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+                
+                <form method="post">
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Dados de Acesso</label>
+                        <div class="row">
+                            <div class="col-md-12 mb-2">
+                                <label class="form-label text-muted small">{{ form.name.label }}</label>
+                                {{ form.name }}
+                                <div class="text-danger small">{{ form.name.errors }}</div>
+                            </div>
+                            <div class="col-md-12 mb-2">
+                                <label class="form-label text-muted small">{{ form.username.label }}</label>
+                                {{ form.username }}
+                                <div class="text-danger small">{{ form.username.errors }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3 p-3 bg-light rounded border">
+                        <label class="form-label fw-bold mb-2">Perfil e Permissões</label>
+                        <div class="form-check form-switch">
+                            {{ form.eh_comprador }}
+                            <label class="form-check-label" for="{{ form.eh_comprador.id_for_label }}">
+                                <strong>Este usuário é um Comprador?</strong>
+                            </label>
+                        </div>
+                        <small class="text-muted d-block mt-1">
+                            Marque esta opção para que o usuário apareça nas listas de seleção de grades e tenha acesso aos módulos de negociação.
+                        </small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Segurança</label>
+                        <div class="alert alert-info py-2 px-3 small">
+                            <i class="ti ti-info-circle me-1"></i>
+                            A senha deve ter no mínimo 8 caracteres e não ser muito comum.
+                        </div>
+                        
+                        {% for field in form %}
+                            {% if 'password' in field.name %}
+                                <div class="mb-2">
+                                    <label class="form-label text-muted small">{{ field.label }}</label>
+                                    {{ field }} <div class="text-danger small">{{ field.errors }}</div>
+                                    <div class="text-muted font-11">{{ field.help_text }}</div>
+                                </div>
+                                <script>
+                                    // Scriptzinho rápido para adicionar classe bootstrap nos campos de senha
+                                    document.getElementById("{{ field.id_for_label }}").classList.add('form-control');
+                                </script>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+
+                    <div class="d-grid gap-2 mt-4 pt-2 border-top">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="ti ti-user-plus me-1"></i> Cadastrar Usuário
+                        </button>
+                        <a href="javascript:history.back()" class="btn btn-light">Cancelar</a>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

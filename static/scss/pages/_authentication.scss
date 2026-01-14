@@ -1,0 +1,31 @@
+//
+// _authentication.scss
+//
+
+.auth-bg {
+    background-image: url(../images/bg-pattern.png);
+    background-color: #343b4a;
+}
+
+.auth-brand {
+    .logo-dark {
+        display: inline-block;
+    }
+
+    .logo-light {
+        display: none;
+    }
+}
+
+// Dark mode
+html[data-bs-theme="dark"] {
+    .auth-brand {
+        .logo-light {
+            display: inline-block;
+        }
+
+        .logo-dark {
+            display: none;
+        }
+    }
+}

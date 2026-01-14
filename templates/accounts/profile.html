@@ -5,8 +5,6 @@
 {% block content %}
 <div class="profile-container">
     <div class="row">
-        <!-- Sidebar -->
-        {% include 'includes/sidebar.html' %}
 
         <!-- Main Content -->
         <div class="col-md-9 col-lg-10 ms-sm-auto px-md-4 main-content">
@@ -127,7 +125,7 @@
                                     <form action="{% url 'accounts:logout' %}" method="post" class="d-inline">
                                         {% csrf_token %}
                                         <button type="submit" class="action-btn btn-logout">
-                                            <i class="fas fa-sign-out-alt action-icon"></i>
+                                            <i class="ti ti-logout me-1 fs-17 align-middle"></i>
                                             <span>Sair do Sistema</span>
                                         </button>
                                     </form>

@@ -1,0 +1,422 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Apuração Grade #{{ grade.id }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* === 1. COMPORTAMENTO GERAL (Fixo) === */
+    .table-responsive thead th {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        /* Sombra suave para separar o cabeçalho do conteúdo */
+        box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    /* === 2. TEMA LIGHT (Padrão) === */
+    /* Fundo branco para as colunas normais */
+    .table-responsive thead th {
+        background-color: #ffffff; 
+        color: #6c757d; /* Cinza texto padrão */
+    }
+    
+    /* Coluna META no Light (Azul Clarinho) */
+    .table-responsive thead th.bg-primary-subtle {
+        background-color: #e3f2fd !important;
+        color: #727cf5 !important;
+    }
+
+    /* === 3. TEMA DARK (Override) === */
+    /* O CSS abaixo só ativa se o body tiver o atributo de tema escuro */
+    
+    body[data-layout-color="dark"] .table-responsive thead th,
+    body[data-bs-theme="dark"] .table-responsive thead th {
+        background-color: #37404a; /* Cinza do Card Dark */
+        color: #aab8c5; /* Texto claro */
+        box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.4); /* Sombra mais forte no dark */
+    }
+
+    /* Coluna META no Dark (Cinza Azulado Escuro) */
+    body[data-layout-color="dark"] .table-responsive thead th.bg-primary-subtle,
+    body[data-bs-theme="dark"] .table-responsive thead th.bg-primary-subtle {
+        background-color: #3e4b5b !important; /* Fundo escuro destacado */
+        color: #727cf5 !important; /* Mantém o texto azul */
+    }
+</style>
+{% endblock %}
+
+
+
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box">
+            <div class="page-title-right">
+                <ol class="breadcrumb m-0">
+                    <li class="breadcrumb-item"><a href="{% url 'apuracao_grade:grade-list' %}">Grades</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'apuracao_grade:grade-detalhe' grade.id %}">Detalhe #{{ grade.id }}</a></li>
+                    <li class="breadcrumb-item active">Dashboard</li>
+                </ol>
+            </div>
+            <h4 class="page-title">Dashboard de Apuração - {{ grade.evento.descricao }}</h4>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 col-xl-3">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h4 class="mb-0 text-primary" id="kpi-aderencia">0%</h4>
+                        <p class="text-muted text-uppercase fw-semibold font-12 mt-1">Aderência Geral</p>
+                    </div>
+                    <div class="avatar-md rounded-circle bg-primary-subtle border border-primary border-opacity-25 d-flex align-items-center justify-content-center">
+                        <i class="ti ti-target text-primary font-24"></i>
+                    </div>
+                </div>
+                <div class="progress mt-3" style="height: 6px;">
+                    <div class="progress-bar bg-primary" id="bar-aderencia" role="progressbar" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-xl-3">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h4 class="mb-0 text-danger" id="kpi-pirata">0</h4>
+                        <p class="text-muted text-uppercase fw-semibold font-12 mt-1">Volume Vazado (Un)</p>
+                    </div>
+                    <div class="avatar-md rounded-circle bg-danger-subtle border border-danger border-opacity-25 d-flex align-items-center justify-content-center">
+                        <i class="ti ti-alert-triangle text-danger font-24"></i>
+                    </div>
+                </div>
+                <small class="text-muted" id="kpi-pirata-valor">R$ 0,00 desviados</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-xl-3">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h4 class="mb-0 text-success" id="kpi-homologado">0</h4>
+                        <p class="text-muted text-uppercase fw-semibold font-12 mt-1">Volume Homologado</p>
+                    </div>
+                    <div class="avatar-md rounded-circle bg-success-subtle border border-success border-opacity-25 d-flex align-items-center justify-content-center">
+                        <i class="ti ti-thumb-up text-success font-24"></i>
+                    </div>
+                </div>
+                 <small class="text-muted">Compras no fornecedor correto</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-xl-3">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h4 class="mb-0 text-warning" id="kpi-fora-prazo">0</h4>
+                        <p class="text-muted text-uppercase fw-semibold font-12 mt-1">Compras Fora Prazo</p>
+                    </div>
+                    <div class="avatar-md rounded-circle bg-warning-subtle border border-warning border-opacity-25 d-flex align-items-center justify-content-center">
+                        <i class="ti ti-clock text-warning font-24"></i>
+                    </div>
+                </div>
+                <small class="text-muted">Após grade, até fim evento</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-xl-8">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="header-title mb-3">Evolução do Cumprimento da Grade (Acumulado %)</h4>
+                <div dir="ltr">
+                    <div id="chart-timeline" class="apex-charts" data-colors="#727cf5,#fa5c7c"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-4">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="header-title mb-3">Top Fornecedores "Ofensores"</h4>
+                
+                <div id="empty-ofensores" class="text-center py-5 text-muted" style="display:none;">
+                    <i class="ti ti-check-circle text-success display-4"></i>
+                    <p class="mt-2">Parabéns! Nenhum ofensor detectado.</p>
+                </div>
+
+                <div dir="ltr">
+                    <div id="chart-ofensores" class="apex-charts" data-colors="#fa5c7c"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header border-bottom border-dashed">
+                <h4 class="header-title mb-0">Detalhamento por Produto e Associado</h4>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive" style="max-height: 500px;">
+                    <table class="table table-centered table-nowrap table-hover mb-0" id="tabela-detalhe">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Associado</th>
+                                <th>Produto (Item Grade)</th>
+                                <th class="text-center bg-primary-subtle text-primary">Meta (Vol.)</th>
+                                <th class="text-center text-success">Aderência (Vol.)</th>
+                                <th class="text-center text-warning">Fora Prazo (Vol.)</th>
+                                <th class="text-center text-danger">Outros Fornec. (Vol.)</th>
+                                <th class="text-center">Total Comprado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-detalhe">
+                            <tr><td colspan="7" class="text-center py-4"><span class="spinner-border text-primary"></span> Carregando dados...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="header-title mb-3">Performance por Associado (Meta vs Realizado Homologado)</h4>
+                <div dir="ltr">
+                    <div id="chart-lojas" class="apex-charts" data-colors="#727cf5,#0acf97"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock content %}
+
+{% block extra_javascript %}
+<script src="{% static 'vendor/apexcharts/apexcharts.min.js' %}"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const apiUrl = "{% url 'apuracao_grade:api-dashboard' grade.id %}";
+        const colors = { primary: "#727cf5", success: "#0acf97", danger: "#fa5c7c", warning: "#ffbc00" };
+
+        fetch(apiUrl)
+            .then(r => r.json())
+            .then(resp => {
+                if(resp.status !== 'ok') {
+                    document.getElementById('tbody-detalhe').innerHTML = `<tr><td colspan="7" class="text-danger text-center">${resp.message}</td></tr>`;
+                    return;
+                }
+                processarDados(resp);
+            })
+            .catch(err => console.error("Erro API", err));
+
+        function processarDados(data) {
+            const apuracao = data.dados_apuracao;
+            const ofensores = data.dados_ofensores;
+            const metas = data.metas_por_loja;
+            const dadosTabela = data.dados_tabela;
+            
+            // Calculando totais globais
+            const totalMetaGlobal = Object.values(metas).reduce((a, b) => a + b, 0);
+
+            // --- 1. RENDERIZAR TABELA DETALHADA ---
+            const tbody = document.getElementById('tbody-detalhe');
+            tbody.innerHTML = '';
+            
+            if (dadosTabela.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">Nenhum dado encontrado.</td></tr>';
+            } else {
+                dadosTabela.forEach(row => {
+                    const totalComprado = row.aderente + row.fora_prazo + row.outros;
+                    const meta = row.meta || 0;
+                    
+                    let metaClass = "text-primary";
+                    if (row.aderente >= meta && meta > 0) metaClass = "text-success fw-bold";
+                    
+                    const tr = `
+                        <tr>
+                            <td class="fw-bold text-wrap" style="max-width: 200px;">${row.associado}</td>
+                            <td class="text-wrap" style="max-width: 250px;">${row.produto}</td>
+                            <td class="text-center bg-primary-subtle ${metaClass}">${meta.toLocaleString('pt-BR')}</td>
+                            <td class="text-center text-success fw-bold">${row.aderente.toLocaleString('pt-BR')}</td>
+                            <td class="text-center text-warning">${row.fora_prazo.toLocaleString('pt-BR')}</td>
+                            <td class="text-center text-danger">${row.outros.toLocaleString('pt-BR')}</td>
+                            <td class="text-center fw-bold">${totalComprado.toLocaleString('pt-BR')}</td>
+                        </tr>
+                    `;
+                    tbody.innerHTML += tr;
+                });
+            }
+
+            // --- 2. PREPARAR DADOS TEMPORAIS (ACUMULADO %) ---
+            // Precisamos preencher todos os dias entre inicio e fim do evento, senão o gráfico fica "buracado"
+            const mapDiario = {};
+            
+            // Cria mapa com dados brutos
+            apuracao.forEach(row => {
+                const dia = row.data_emissao; // Formato YYYY-MM-DD
+                if (!mapDiario[dia]) mapDiario[dia] = 0;
+                // Soma apenas o homologado (aderente) para a curva S principal
+                mapDiario[dia] += parseFloat(row.qtd_homologada || 0);
+            });
+
+            // Gera lista completa de datas
+            const dataCursor = new Date(data.periodo.inicio);
+            const dataFimEvento = new Date(data.periodo.fim_evento);
+            const seriesAcumulada = [];
+            const labelsDatas = [];
+            
+            let acumuladoAtual = 0;
+
+            while (dataCursor <= dataFimEvento) {
+                // Formata YYYY-MM-DD para buscar no mapa
+                const isoDate = dataCursor.toISOString().split('T')[0];
+                
+                // Soma do dia (se houver)
+                const volDia = mapDiario[isoDate] || 0;
+                acumuladoAtual += volDia;
+
+                // Cálculo do Percentual
+                let percAtual = 0;
+                if (totalMetaGlobal > 0) {
+                    percAtual = (acumuladoAtual / totalMetaGlobal) * 100;
+                }
+                
+                // Regra de Ouro: Capar em 100%
+                if (percAtual > 100) percAtual = 100;
+
+                seriesAcumulada.push(percAtual.toFixed(2)); // Guarda com 2 casas
+                labelsDatas.push(isoDate);
+
+                // Avança 1 dia
+                dataCursor.setDate(dataCursor.getDate() + 1);
+            }
+
+            // Atualiza KPIs
+            const totalHomologado = apuracao.reduce((acc, r) => acc + parseFloat(r.qtd_homologada||0), 0);
+            const totalPirata = apuracao.reduce((acc, r) => acc + parseFloat(r.qtd_pirata||0), 0);
+            const totalForaPrazo = apuracao.reduce((acc, r) => acc + parseFloat(r.qtd_atrasada||0), 0);
+            
+            const aderenciaFinal = totalMetaGlobal > 0 ? (totalHomologado / totalMetaGlobal) * 100 : 0;
+            document.getElementById('kpi-aderencia').innerText = aderenciaFinal.toFixed(1) + "%";
+            document.getElementById('bar-aderencia').style.width = Math.min(aderenciaFinal, 100) + "%";
+            document.getElementById('kpi-pirata').innerText = Math.round(totalPirata).toLocaleString('pt-BR');
+            document.getElementById('kpi-homologado').innerText = Math.round(totalHomologado).toLocaleString('pt-BR');
+            document.getElementById('kpi-fora-prazo').innerText = Math.round(totalForaPrazo).toLocaleString('pt-BR');
+            
+            const totalValorPirata = ofensores ? ofensores.reduce((s, i) => s + parseFloat(i.valor_desviado || 0), 0) : 0;
+            document.getElementById('kpi-pirata-valor').innerText = "R$ " + totalValorPirata.toLocaleString('pt-BR', {minimumFractionDigits: 2}) + " desviados";
+
+            // --- RENDERIZAR GRÁFICO TIMELINE (CURVA S) ---
+            new ApexCharts(document.querySelector("#chart-timeline"), {
+                chart: { type: 'area', height: 380, toolbar: {show: false} },
+                colors: [colors.primary],
+                fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.4, opacityTo: 0.05 } },
+                dataLabels: { enabled: false },
+                stroke: { curve: 'smooth', width: 3 },
+                series: [
+                    { name: '% Atingido da Grade', data: seriesAcumulada }
+                ],
+                xaxis: { 
+                    categories: labelsDatas, 
+                    type: 'datetime',
+                    tooltip: { enabled: false }
+                },
+                yaxis: { 
+                    min: 0, 
+                    max: 100, // Força o eixo ir até 100
+                    tickAmount: 5,
+                    labels: { formatter: (val) => val.toFixed(0) + "%" },
+                    title: { text: '% da Meta Total' }
+                },
+                tooltip: { x: { format: 'dd/MM/yyyy' }, y: { formatter: (val) => val + "%" } },
+                
+                // ANOTAÇÕES (LINHAS DE REFERÊNCIA)
+                annotations: {
+                    xaxis: [{
+                        x: new Date(data.periodo.fim_grade).getTime(),
+                        borderColor: '#fa5c7c',
+                        borderWidth: 2,
+                        strokeDashArray: 4,
+                        label: { 
+                            style: { color: '#fff', background: '#fa5c7c' }, 
+                            text: 'Fim da Grade' 
+                        }
+                    }],
+                    yaxis: [{
+                        y: 100,
+                        borderColor: '#0acf97',
+                        label: { 
+                            style: { color: '#fff', background: '#0acf97' }, 
+                            text: 'Meta 100%' 
+                        }
+                    }]
+                }
+            }).render();
+
+            // --- 3. GRÁFICO OFENSORES ---
+            if (ofensores && ofensores.length > 0) {
+                const nomes = ofensores.map(o => (o.fornecedor_nome || 'Desconhecido').substring(0, 20));
+                const valores = ofensores.map(o => parseFloat(o.volume_pirata || 0));
+
+                new ApexCharts(document.querySelector("#chart-ofensores"), {
+                    chart: { type: 'bar', height: 380, toolbar: {show: false} },
+                    plotOptions: { bar: { horizontal: true, barHeight: '50%', distributed: true } },
+                    colors: [colors.danger],
+                    series: [{ name: 'Volume Vendido', data: valores }],
+                    xaxis: { categories: nomes },
+                    legend: { show: false },
+                    tooltip: { y: { formatter: (val) => val.toLocaleString('pt-BR') + " un" } }
+                }).render();
+            } else {
+                document.getElementById('empty-ofensores').style.display = 'block';
+                document.querySelector('#chart-ofensores').style.display = 'none';
+            }
+
+            // --- 4. GRÁFICO LOJAS ---
+            const lojasMap = {};
+            for (const [loja, meta] of Object.entries(metas)) {
+                lojasMap[loja] = { meta: meta, realizado: 0 };
+            }
+            apuracao.forEach(row => {
+                const l = row.NomeAssociado.toUpperCase().trim();
+                if(lojasMap[l]) lojasMap[l].realizado += parseFloat(row.qtd_homologada || 0);
+            });
+            const nomesLojas = Object.keys(lojasMap).sort();
+            const dMeta = nomesLojas.map(n => lojasMap[n].meta);
+            const dReal = nomesLojas.map(n => lojasMap[n].realizado);
+
+            new ApexCharts(document.querySelector("#chart-lojas"), {
+                chart: { type: 'bar', height: 400, toolbar: {show: false} },
+                plotOptions: { bar: { horizontal: false, columnWidth: '55%', endingShape: 'rounded' } },
+                dataLabels: { enabled: false },
+                colors: [colors.primary, colors.success],
+                series: [{ name: 'Meta', data: dMeta }, { name: 'Realizado', data: dReal }],
+                xaxis: { categories: nomesLojas, labels: { rotate: -45, trim: true, maxHeight: 100 } },
+                tooltip: { y: { formatter: (val) => val.toLocaleString('pt-BR') + " un" } }
+            }).render();
+        }
+    });
+</script>
+{% endblock %}

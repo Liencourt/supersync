@@ -1,0 +1,188 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Grades de Compras | Super Sync{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box">
+            <div class="page-title-right">
+                <a href="{% url 'apuracao_grade:grade-create' %}" class="btn btn-primary mb-3 shadow-sm">
+                    <i class="ti ti-plus me-1"></i> Nova Grade
+                </a>
+            </div>
+            <h4 class="page-title">Grades de Compras</h4>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-3">
+    <div class="col-md-5 col-xl-4">
+        <form method="GET" action=".">
+            <div class="input-group shadow-sm">
+                <span class="input-group-text bg-white border-end-0"><i class="ti ti-search"></i></span>
+                <input type="text" name="q" class="form-control border-start-0" 
+                       placeholder="Buscar por ID, Evento, Fornecedor..." 
+                       value="{{ search_term }}">
+                <button class="btn btn-primary" type="submit">Buscar</button>
+                {% if search_term %}
+                    <a href="?" class="btn btn-outline-secondary" title="Limpar Filtros"><i class="ti ti-x"></i></a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-centered table-nowrap table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 80px;">ID</th>
+                                <th>Fornecedor / Grupo</th> 
+                                <th>Comprador</th>
+                                <th>Evento</th>
+                                <th>Período</th>
+                                <th>Status</th>
+                                <th style="width: 120px;" class="text-end">Ações</th>
+                            </tr>
+                        </thead>
+                       <tbody>
+                            {% for grade in grades %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'apuracao_grade:grade-detalhe' grade.id %}" class="fw-bold text-primary">
+                                        #{{ grade.id }}
+                                    </a>
+                                </td>
+                                <td>
+                                    {% for grupo in grade.grupos.all %}
+                                        <div class="d-flex align-items-center mb-1">
+                                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle font-12">
+                                                {{ grupo.grupo_nome }}
+                                            </span>
+                                        </div>
+                                    {% empty %}
+                                        <span class="text-muted small">Sem grupo vinculado</span>
+                                    {% endfor %}
+                                </td>
+                                <td>
+                                    <span class="text-muted font-13">
+                                        <i class="ti ti-user me-1"></i>
+                                        {% if grade.comprador %}
+                                            {{ grade.comprador.name|default:grade.comprador.username }}
+                                        {% else %}
+                                            <span class="text-muted">--</span>
+                                        {% endif %}
+                                    </span>
+                                </td>
+                                <td>{{ grade.evento.descricao }}</td>
+                                <td>
+                                    <span class="badge bg-light text-dark border">
+                                        {{ grade.data_inicio|date:"d/m/Y" }} a {{ grade.data_fim|date:"d/m/Y" }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if grade.status == 'rascunho' %}
+                                        <span class="badge bg-secondary-subtle text-secondary">Rascunho</span>
+                                    {% elif grade.status == 'concluida' %}
+                                        <span class="badge bg-success-subtle text-success">Concluída</span>
+                                    {% else %}
+                                        <span class="badge bg-info-subtle text-info">{{ grade.get_status_display }}</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end pe-3">
+                                    <a href="{% url 'apuracao_grade:grade-dashboard' grade.id %}" class="btn btn-sm btn-outline-primary me-1" title="Dashboard">
+                                        <i class="ti ti-chart-bar"></i>
+                                    </a>
+                                    <a href="{% url 'apuracao_grade:grade-detalhe' grade.id %}" class="btn btn-sm btn-info" title="Editar">
+                                        <i class="ti ti-edit"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-sm btn-light text-danger" 
+                                            onclick="confirmarExclusaoGrade('{{ grade.id }}')"
+                                            data-bs-toggle="tooltip" title="Excluir Grade">
+                                        <i class="ti ti-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="7" class="text-center py-5 text-muted">
+                                    <i class="ti ti-search font-24 d-block mb-2"></i>
+                                    Nenhuma grade encontrada para sua busca.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            {% if is_paginated %}
+            <div class="card-footer bg-white border-top-0 py-3">
+                <nav>
+                    <ul class="pagination justify-content-center mb-0">
+                        {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}&q={{ search_term }}">&laquo;</a>
+                        </li>
+                        {% endif %}
+                        
+                        <li class="page-item disabled">
+                            <span class="page-link">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+                        </li>
+
+                        {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}&q={{ search_term }}">&raquo;</a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalExcluirGrade" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body text-center p-4">
+                <div class="text-danger display-4 mb-3">
+                    <i class="ti ti-alert-triangle"></i>
+                </div>
+                <h3 class="mb-2">Excluir Grade?</h3>
+                <p class="text-muted">
+                    Você está prestes a apagar a <strong>Grade #<span id="spanIdGrade"></span></strong>.<br>
+                    Isso removerá <strong>TODOS</strong> os itens, distribuições e configurações vinculadas.<br>
+                    <span class="fw-bold text-danger">Essa ação é irreversível!</span>
+                </p>
+                <form method="post" id="formExcluirGrade" action="">
+                    {% csrf_token %}
+                    <div class="d-flex justify-content-center gap-2 mt-4">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-danger px-4">Sim, Excluir Tudo</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_javascript %}
+<script>
+    function confirmarExclusaoGrade(id) {
+        document.getElementById('spanIdGrade').innerText = id;
+        let urlBase = "{% url 'apuracao_grade:grade-delete' 0 %}";
+        let urlFinal = urlBase.replace('0', id);
+        document.getElementById('formExcluirGrade').action = urlFinal;
+        $('#modalExcluirGrade').modal('show');
+    }
+</script>
+{% endblock %}

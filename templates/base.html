@@ -1,98 +1,114 @@
+{% load static i18n %}
 <!DOCTYPE html>
-<html lang="pt-br">
+{% get_current_language as LANGUAGE_CODE %}
+<html lang="{{ LANGUAGE_CODE }}">
+
 <head>
-    <meta charset="UTF-8">
+    <meta charset="utf-8" />
+    <title>{% block title %}{% endblock title %} | SuperSync - SAERJ</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Super Sync{% endblock %}</title>
+    <meta content="Analise Gerencial." name="description" />
+    <meta content="Coderthemes" name="author" />
 
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="icon" href="{% static 'images/favicon.ico' %}" />
 
-    {% load static %}
-    <link rel="stylesheet" href="{% static 'css/base.css' %}">
-
-    {% block extra_css %}{% endblock %}
+    {% block css %}
+        {% block extra_css %}{% endblock extra_css %}
+        <script src="{% static 'js/config.js' %}"></script>
+        <link href="{% static 'css/app.min.css' %}" rel="stylesheet" />
+        <link href="{% static 'css/icons.min.css' %}" rel="stylesheet" />
+    {% endblock css %}
 </head>
-<body>
+
+<body data-layout="vertical" data-layout-color="dark" data-sidebar="dark">
+
     {% if user.is_authenticated %}
-        <!-- Professional Navbar -->
-        <nav class="navbar navbar-expand-lg navbar-dark">
-            <div class="container-fluid">
-                <a class="navbar-brand" href="{% url 'dashboard:home' %}">
-                    <i class="fas fa-file-contract"></i>
-                    <span>Super Sync</span>
-                </a>
+        <div class="wrapper">
+            
+            {% include "partials/topbar.html" %}
+            {% include "partials/sidebar.html" %}
+            
+            <div class="content-page">
+                <div class="content">
+                    <div class="container-fluid">
+                        
+                        {% block page_title %}{% endblock %}
 
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-
-                <div class="collapse navbar-collapse" id="navbarNav">
-                    <ul class="navbar-nav ms-auto">
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="fas fa-user-circle me-1"></i>
-                                <span>{{ user.first_name|default:user.username }}</span>
-                            </a>
-                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-                                <li>
-                                    <a class="dropdown-item" href="{% url 'accounts:profile' %}">
-                                        <i class="fas fa-user-cog me-2"></i>
-                                        <span>Perfil</span>
-                                    </a>
-                                </li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li>
-                                    <form action="{% url 'accounts:logout' %}" method="post" class="d-inline">
-                                        {% csrf_token %}
-                                        <button type="submit" class="dropdown-item logout-button">
-                                            <i class="fas fa-sign-out-alt me-2"></i>
-                                            <span>Sair do Sistema</span>
-                                        </button>
-                                    </form>
-                                </li>
-                            </ul>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </nav>
-    {% endif %}
-
-    <!-- Enhanced Messages -->
-    {% if messages %}
-        <div class="container-fluid mt-3">
-            <div class="row justify-content-center">
-                <div class="col-lg-8 col-md-10">
-                    {% for message in messages %}
-                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                            <div class="d-flex align-items-center">
-                                <i class="fas
-                                    {% if message.tags == 'success' %}fa-check-circle
-                                    {% elif message.tags == 'danger' %}fa-exclamation-circle
-                                    {% elif message.tags == 'warning' %}fa-exclamation-triangle
-                                    {% else %}fa-info-circle{% endif %}
-                                    me-2"></i>
-                                <span>{{ message }}</span>
+                        {% if messages %}
+                            <div class="row mt-3">
+                                <div class="col-12">
+                                    {% for message in messages %}
+                                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm" role="alert">
+                                            {{ message }}
+                                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                        </div>
+                                    {% endfor %}
+                                </div>
                             </div>
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                        </div>
-                    {% endfor %}
-                </div>
-            </div>
-        </div>
+                        {% endif %}
+    {% else %}
+        <div class="auth-page-wrapper">
     {% endif %}
 
-    <!-- Main Content -->
-    <main>
-        {% block content %}{% endblock %}
-    </main>
+            {% block content %}{% endblock content %}
 
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    {% if user.is_authenticated %}
+                    </div> </div> 
 
-    {% block extra_js %}{% endblock %}
+            </div> </div> {% else %}
+        </div> {% endif %}
+
+    {% block extra_modals %}{% endblock extra_modals %}
+    {% block modal %}{% endblock modal %}
+
+    <script src="{% static 'js/vendors.min.js' %}"></script>
+    <script src="{% static 'js/app.min.js' %}"></script>
+
+    {% block extra_javascript %}{% endblock extra_javascript %}
 </body>
 </html>
+<style>
+    /* 1. SIDEBAR: Fixo, altura total, começando do topo */
+    .sidenav-menu, .left-side-menu, .app-sidebar {
+        position: fixed !important;
+        top: 0 !important;       /* Começa lá no teto */
+        left: 0 !important;
+        bottom: 0 !important;
+        width: 260px !important; /* Largura padrão */
+        z-index: 1005 !important; /* Fica acima de tudo */
+        background-color: #313a46; /* Cor de fundo */
+        overflow-y: auto;        /* Scroll se o menu for comprido */
+        padding-top: 0 !important;
+    }
+
+    /* 2. CONTEÚDO PRINCIPAL: Margem na esquerda */
+    .content-page {
+        margin-left: 260px !important; /* Empurra para o lado do menu */
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh; /* Garante que a página ocupe a tela toda */
+    }
+
+    .content {
+        flex-grow: 1;
+        padding-bottom: 60px;
+        
+        /* ADICIONE ESSA LINHA ABAIXO: */
+        padding-top: 10px !important; /* Empurra o conteúdo para baixo da Topbar */
+    }
+
+    /* 4. FOOTER: Ajuste para não colar */
+    .footer {
+        background: #fff;       /* Garante fundo para não ficar transparente */
+        padding: 20px;          /* Espaço interno */
+        border-top: 1px solid #eef2f7; /* Linha sutil de separação */
+        position: relative;     /* Evita que ele flutue por cima do texto */
+        /* Se quiser ele fixo na tela, use position: fixed; bottom: 0; right: 0; left: 260px; */
+    }
+
+    /* 5. TOPBAR: Ajuste fino */
+    .navbar-custom, .app-topbar {
+        /* Se o menu lateral já tem o logo, a barra de topo começa DEPOIS dele */
+        /* left: 260px !important;  <-- DESCOMENTE SE A BARRA ESTIVER EM CIMA DO LOGO */
+    }
+</style>

@@ -1,0 +1,68 @@
+{% load static %}
+
+<div class="sidenav-menu">
+
+    <div class="logo-box">
+        <a href="{% url 'dashboard:home' %}" class="logo">
+            <span class="logo-light">
+                <span class="logo-lg"><img src="{% static 'images/logo.png' %}"></span>
+                <span class="logo-sm"><img src="{% static 'images/logo-sm.png' %}"></span>
+            </span>
+            <span class="logo-dark">
+                <span class="logo-lg"><img src="{% static 'images/logo-dark.png' %}"></span>
+                <span class="logo-sm"><img src="{% static 'images/logo-sm.png' %}"></span>
+            </span>
+        </a>
+    </div>
+
+    <div class="h-100" data-simplebar>
+        <ul class="side-nav" id="side-menu">
+            <li class="side-nav-title">Navegação</li>
+            <li class="side-nav-item">
+                <a href="{% url 'dashboard:home' %}" class="side-nav-link">
+                    <i class="ti ti-tachometer"></i> <span> Home </span>
+                </a>
+            </li>
+
+            <li class="side-nav-title">Módulos</li>
+
+            <li class="side-nav-item">
+                <a data-bs-toggle="collapse" href="#sidebarContratos" aria-expanded="false" aria-controls="sidebarContratos" class="side-nav-link">
+                    <i class="ti ti-file-invoice"></i> <span> Contratos </span> <span class="menu-arrow"></span>
+                </a>
+                <div class="collapse" id="sidebarContratos">
+                    <ul class="side-nav-second-level">
+                        <li><a href="{% url 'contratos:listar_contratos' %}">Lista de Contratos</a></li>
+                        <li><a href="{% url 'apuracao_contrato:apuracao' %}">Apuração</a></li>
+                    </ul>
+                </div>
+            </li>
+
+            <li class="side-nav-item">
+                <a data-bs-toggle="collapse" href="#sidebarGrade" aria-expanded="false" aria-controls="sidebarGrade" class="side-nav-link">
+                    <i class="ti ti-layout-grid"></i> <span> Gestão de Grade </span> <span class="menu-arrow"></span>
+                </a>
+                <div class="collapse" id="sidebarGrade">
+                    <ul class="side-nav-second-level">
+                        <li><a href="{% url 'apuracao_grade:evento-list' %}">Evento</a></li>
+                        <li><a href="{% url 'apuracao_grade:grade-list' %}">Grades</a></li>
+                    </ul>
+                </div>
+            </li>
+
+            <li class="side-nav-title">Conta</li>
+            <li class="side-nav-item">
+                <a href="{% url 'accounts:profile' %}" class="side-nav-link">
+                    <i class="ti ti-user-hexagon me-1 fs-17 align-middle"></i> <span> Meu Perfil </span>
+                </a>
+            </li>
+            <li class="side-nav-item">
+                <a href="javascript:void(0);" onclick="document.getElementById('logout-sidebar-form').submit();" class="side-nav-link">
+                    <i class="ti ti-logout"></i> <span> Sair </span>
+                </a>
+                <form id="logout-sidebar-form" action="{% url 'accounts:logout' %}" method="POST" style="display: none;">{% csrf_token %}</form>
+            </li>
+        </ul>
+        <div class="clearfix"></div>
+    </div>
+</div>

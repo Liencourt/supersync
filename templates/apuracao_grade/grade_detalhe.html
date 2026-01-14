@@ -1,0 +1,794 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Detalhes da Grade #{{ grade.id }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-xl-3 col-lg-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title mb-3">Grade #{{ grade.id }}</h5>
+                
+                <div class="mb-3">
+                    <label class="text-muted small">Evento</label>
+                    <div class="fw-bold">{{ grade.evento.descricao }}</div>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="text-muted small">Comprador</label>
+                    <div class="fw-bold">{{ grade.comprador_responsavel }}</div>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="text-muted small">Vigência</label>
+                    <div>{{ grade.data_inicio|date:"d/m/Y" }} a {{ grade.data_fim|date:"d/m/Y" }}</div>
+                </div>
+
+                <hr>
+                <h6 class="text-primary font-14">Grupos Participantes:</h6>
+                <ul class="list-unstyled mb-0 font-13">
+                    {% for grupo in grade.grupos.all %}
+                        <li class="mb-1 text-truncate" title="{{ grupo.grupo_nome }}">
+                            <i class="ti ti-check text-success me-1"></i> {{ grupo.grupo_nome }}
+                        </li>
+                    {% endfor %}
+                </ul>
+
+
+                <div class="col-xl-3 col-lg-4">
+    <div class="card">
+        <div class="card-body">
+                            <div class="d-grid mt-4 gap-2">
+                                
+                                <a href="{% url 'apuracao_grade:grade-exportar' grade.id %}" class="btn btn-outline-success">
+                                    <i class="ti ti-file-spreadsheet me-1"></i> Exportar Excel
+                                </a>
+
+                                <a href="{% url 'apuracao_grade:grade-list' %}" class="btn btn-outline-secondary">
+                                    <i class="ti ti-arrow-left me-1"></i> Voltar
+                                </a>
+                                
+                                <button type="button" class="btn btn-success" onclick="finalizarGrade()">
+                                    <i class="ti ti-check me-1"></i> 
+                                    {% if grade.status == 'concluida' %}
+                                        Revalidar Grade
+                                    {% else %}
+                                        Finalizar Grade
+                                    {% endif %}
+                                </button>
+                            </div>
+                            
+                        </div>
+                    </div>
+                </div>
+
+                
+
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-9 col-lg-8">
+        <div class="card">
+            <div class="card-body">
+                
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4 class="header-title">Itens / Produtos da Grade</h4>
+                    
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalNovoItem">
+                        <i class="ti ti-plus me-1"></i> Adicionar Item
+                    </button>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-centered table-nowrap table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>ID</th>
+                                <th>Descrição do Item</th>
+                                <th>Emb.</th>
+                                <th>Qtd. SKUs</th>
+                                <th>Vol. Negociado</th>
+                                <th>Custo Líq.</th>
+                                <th>Ações</th>
+                                <th style="width: 80px;"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in itens_com_status %}
+                            
+                            <tr class="{% if item.total_distribuido != item.volume_negociado %}table-warning{% endif %}">
+                                <td>
+                                    <span class="fw-bold text-primary">#{{ item.id }}</span>
+                                </td>
+                                <td>
+                                    <h5 class="font-14 my-1 fw-bold text-dark">{{ item.descricao_resumida }}</h5>
+                                    
+                                    {% if item.total_distribuido != item.volume_negociado %}
+                                        <small class="text-danger fw-bold">
+                                            <i class="ti ti-alert-triangle"></i> 
+                                            Distribuído: {{ item.total_distribuido|floatformat:0 }} / {{ item.volume_negociado|floatformat:0 }}
+                                        </small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge bg-info-subtle text-info font-12">{{ item.get_unidade_medida_display }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-light text-dark border" data-bs-toggle="tooltip"
+                                            title="{% for sku in item.skus.all|slice:':5' %}{{ sku.descricao_produto }}&#10;{% endfor %}">
+                                        {{ item.skus.count }} SKUs linked
+                                    </span>
+                                </td>
+                                
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <span class="fs-14 me-2">{{ item.volume_negociado|floatformat:0 }}</span>
+                                        
+                                        {% if item.total_distribuido == item.volume_negociado %}
+                                            <i class="ti ti-check text-success fs-16" data-bs-toggle="tooltip" title="Volume distribuído 100% correto"></i>
+                                        {% else %}
+                                            <i class="ti ti-alert-circle text-danger fs-16" 
+                                            data-bs-toggle="tooltip" 
+                                            title="Atenção: Você distribuiu {{ item.total_distribuido|floatformat:0 }} de {{ item.volume_negociado|floatformat:0 }}"></i>
+                                        {% endif %}
+                                    </div>
+                                </td>
+
+                                <td class="text-success fw-bold">R$ {{ item.custo_liquido }}</td>
+                                
+                                <td class="text-end">
+                                    <button type="button" class="btn btn-sm btn-info me-1" 
+                                            onclick="abrirDistribuicao('{{ item.id }}')"
+                                            data-bs-toggle="tooltip" title="Distribuir">
+                                        <i class="ti ti-chart-pie"></i>
+                                    </button>
+
+                                    <button type="button" class="btn btn-sm btn-warning me-1" 
+                                            onclick="prepararEdicaoItem('{{ item.id }}')"
+                                            data-bs-toggle="tooltip" title="Editar Item">
+                                        <i class="ti ti-pencil"></i>
+                                    </button>
+
+                                    <a href="javascript:void(0);" 
+                                    onclick="confirmarExclusao('{{ item.id }}', '{{ item.descricao_resumida }}')" 
+                                    class="btn btn-sm btn-light text-danger" title="Excluir">
+                                        <i class="ti ti-trash"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="7" class="text-center py-5">
+                                    <div class="opacity-50">
+                                        <i class="ti ti-basket-off display-4"></i>
+                                        <p class="mt-2">Nenhum item adicionado ainda.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalNovoItem" tabindex="-1" aria-hidden="true" style="z-index: 1055;">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Adicionar Novo Agrupamento</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            
+            <div class="modal-body">
+                <form method="post" id="form-item">
+                    {% csrf_token %}
+                    
+                    {{ form_item.skus_json }} 
+
+                    <div class="row g-3">
+                        <div class="col-md-8">
+                            <label class="form-label">Descrição Resumida <span class="text-danger">*</span></label>
+                            {{ form_item.descricao_resumida }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Unidade <span class="text-danger">*</span></label>
+                            {{ form_item.unidade_medida }}
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Qtd. Emb.</label>
+                            <div class="input-group">
+                                <span class="input-group-text text-muted bg-light">x</span>
+                                {{ form_item.quantidade_embalagem }}
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="card bg-light border mb-0">
+                                <div class="card-body p-3">
+                                    <label class="form-label text-primary fw-bold">
+                                        <i class="ti ti-link me-1"></i> Relacionar SKUs (Produtos)
+                                    </label>
+                                    
+                                    <div class="input-group">
+                                        {{ form_item.busca_sku }}
+                                        <button class="btn btn-primary" type="button" id="btn-buscar-sku">
+                                            <i class="ti ti-search"></i>
+                                        </button>
+                                    </div>
+
+                                    <div id="lista-skus-resultado" class="list-group mt-1 position-absolute w-100 shadow-lg" 
+                                         style="z-index: 1060; display: none; max-height: 250px; overflow-y: auto;">
+                                    </div>
+
+                                    <div class="mt-3">
+                                        <small class="text-muted text-uppercase font-11 fw-bold">Produtos Selecionados:</small>
+                                        <div id="container-skus-selecionados" class="d-flex flex-wrap gap-2 mt-2" style="min-height: 40px;">
+                                            <span class="text-muted small fst-italic" id="msg-sem-sku">Use a busca acima para adicionar produtos.</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-12"><hr class="my-1"></div>
+                        <h6 class="text-muted mb-0">Condições Comerciais</h6>
+
+                        <div class="col-md-4">
+                            <label class="form-label">Volume Total</label>
+                            {{ form_item.volume_negociado }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Custo Bruto (R$)</label>
+                            {{ form_item.custo_bruto }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Custo Líquido (R$)</label>
+                            {{ form_item.custo_liquido }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Verba Sell-In (R$)</label>
+                            {{ form_item.verba_sell_in }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Desconto Boleto (%)</label>
+                            {{ form_item.desconto_boleto }}
+                        </div>
+                    </div>
+
+                    <div class="modal-footer px-0 pb-0 mt-3 border-top-0">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary px-4">Salvar Agrupamento</button>
+                        <button type="button" class="btn btn-outline-warning text-dark" onclick="recalcularDistribuicao()">
+                            <i class="ti ti-refresh me-1"></i> Recalcular (Histórico)
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="modalExcluirItem" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body text-center p-4">
+                <div class="text-danger display-4 mb-3">
+                    <i class="ti ti-alert-circle"></i>
+                </div>
+                <h3>Tem certeza?</h3>
+                <p class="text-muted mb-4">
+                    Você está prestes a remover o item <br>
+                    <strong id="nomeItemExclusao" class="text-dark">...</strong>.<br>
+                    Essa ação não pode ser desfeita.
+                </p>
+                
+                <form method="post" id="formExcluirItem" action="">
+                    {% csrf_token %}
+                    <div class="d-flex justify-content-center gap-2">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-danger">Sim, Excluir!</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="modalDistribuicao" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-light">
+                <h5 class="modal-title"><i class="ti ti-building-store me-2"></i>Distribuição por Associado</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            
+            <div class="modal-body p-0">
+                <div class="p-3 bg-primary-subtle border-bottom d-flex justify-content-between align-items-center">
+                    <div>
+                        <small class="text-primary fw-bold text-uppercase d-block">Volume Negociado</small>
+                        <span class="fs-4 fw-bold text-primary" id="dist-vol-total">0</span> <small class="text-muted">unid/cx</small>
+                    </div>
+                    <div class="text-end">
+                        <small class="text-muted fw-bold d-block">Total Distribuído</small>
+                        <span class="fs-4 fw-bold text-dark" id="dist-vol-soma">0</span>
+                        <div id="dist-status" class="badge bg-warning text-dark ms-2">Calculando...</div>
+                    </div>
+                </div>
+
+                <div class="table-responsive" style="max-height: 400px;">
+                    <table class="table table-sm table-hover table-bordered mb-0 align-middle">
+                        <thead class="table-light sticky-top" style="top: 0; z-index: 2;">
+                            <tr>
+                                <th class="ps-3">Associado / Loja</th>
+                                <th style="width: 130px;" class="text-center">% Part.</th>
+                                <th style="width: 150px;" class="text-center">Volume</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-distribuicao">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="modal-footer bg-light-subtle">
+                <button type="button" class="btn btn-outline-warning text-dark" onclick="recalcularDistribuicao()">
+                    <i class="ti ti-refresh me-1"></i> Recalcular (Histórico)
+                </button>
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Fechar</button>
+                <button type="button" class="btn btn-primary px-4" onclick="salvarDistribuicao()">
+                    <i class="ti ti-check me-1"></i> Salvar Distribuição
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock content %}
+
+{% block extra_javascript %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        // --- 1. LÓGICA DE SKUS ---
+        let skusSelecionados = []; 
+        
+        const btnBuscarSku = document.getElementById('btn-buscar-sku');
+        const inputBuscaSku = document.getElementById('input-busca-sku');
+        const listaResultadosSku = document.getElementById('lista-skus-resultado');
+        const containerSelecionados = document.getElementById('container-skus-selecionados');
+        const inputHiddenSkus = document.getElementById('id_skus_json'); 
+        const msgSemSku = document.getElementById('msg-sem-sku');
+
+        function atualizarSkusVisuais() {
+            // Limpa containers
+            Array.from(containerSelecionados.children).forEach(child => {
+                if (child.id !== 'msg-sem-sku') {
+                    containerSelecionados.removeChild(child);
+                }
+            });
+
+            if (skusSelecionados.length === 0) {
+                msgSemSku.style.display = 'inline';
+                inputHiddenSkus.value = '';
+            } else {
+                msgSemSku.style.display = 'none';
+                inputHiddenSkus.value = JSON.stringify(skusSelecionados);
+
+                skusSelecionados.forEach((sku, index) => {
+                    const tag = document.createElement('span');
+                    tag.className = 'badge bg-primary-subtle text-primary border border-primary-subtle d-flex align-items-center p-2 me-1 mb-1';
+                    tag.innerHTML = `
+                        <span class="me-2 text-truncate" style="max-width: 250px;">
+                            <strong>${sku.id}</strong> - ${sku.text}
+                        </span>
+                        <i class="ti ti-x text-danger" style="cursor: pointer; font-size: 14px;" onclick="removerSku(${index})"></i>
+                    `;
+                    containerSelecionados.appendChild(tag);
+                });
+            }
+        }
+
+        window.removerSku = function(index) {
+            skusSelecionados.splice(index, 1);
+            atualizarSkusVisuais();
+        };
+
+        function buscarSku() {
+            const termo = inputBuscaSku.value;
+            if (termo.length < 3) { 
+                alert("Digite pelo menos 3 caracteres."); 
+                return; 
+            }
+
+            const iconeOriginal = btnBuscarSku.innerHTML;
+            btnBuscarSku.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+            btnBuscarSku.disabled = true;
+
+            fetch(`{% url 'apuracao_grade:api-buscar-produtos' %}?term=${encodeURIComponent(termo)}`)
+                .then(response => response.json())
+                .then(data => {
+                    listaResultadosSku.innerHTML = '';
+                    listaResultadosSku.style.display = 'block';
+                    
+                    if(!data || data.length === 0) {
+                        listaResultadosSku.innerHTML = '<div class="list-group-item text-muted">Nenhum produto encontrado.</div>';
+                    } else {
+                        data.forEach(item => {
+                            const btn = document.createElement('button');
+                            btn.type = 'button';
+                            btn.className = 'list-group-item list-group-item-action py-2 d-flex justify-content-between align-items-center';
+                            
+                            // Verifica se já estava selecionado antes para já marcar visualmente
+                            const jaSelecionado = skusSelecionados.some(s => s.id == item.id);
+                            if(jaSelecionado) {
+                                btn.classList.add('bg-success-subtle', 'text-success');
+                                btn.innerHTML = `<span>${item.text}</span> <i class="ti ti-check"></i>`;
+                            } else {
+                                btn.innerHTML = `
+                                    <span class="font-13 text-dark fw-bold">${item.text}</span>
+                                    <span class="badge bg-light text-dark border ms-2">${item.id}</span>
+                                `;
+                            }
+                            
+                            // AQUI ESTÁ A MÁGICA DO MULTI-SELECT
+                            btn.onclick = function() {
+                                // Se já selecionado, não faz nada (ou poderia remover, se preferir toggle)
+                                if (skusSelecionados.some(s => s.id == item.id)) {
+                                    return;
+                                }
+
+                                // Adiciona ao array
+                                skusSelecionados.push(item);
+                                atualizarSkusVisuais();
+
+                                // Feedback Visual: Muda a cor do botão na lista e põe um check
+                                this.classList.remove('list-group-item-action');
+                                this.classList.add('bg-success-subtle', 'text-success');
+                                this.innerHTML = `<span>${item.text}</span> <i class="ti ti-check fs-5"></i>`;
+                                
+                                // MANTÉM A LISTA ABERTA!
+                                // Removemos o inputBuscaSku.value = '' e o display = 'none'
+                                inputBuscaSku.focus(); 
+                            };
+                            listaResultadosSku.appendChild(btn);
+                        });
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                })
+                .finally(() => {
+                    btnBuscarSku.innerHTML = iconeOriginal;
+                    btnBuscarSku.disabled = false;
+                });
+        }
+
+        btnBuscarSku.addEventListener('click', buscarSku);
+        
+        inputBuscaSku.addEventListener('keypress', (e) => { 
+            if(e.key === 'Enter') { 
+                e.preventDefault(); 
+                buscarSku(); 
+            } 
+        });
+        
+        document.addEventListener('click', (e) => {
+            if (!listaResultadosSku.contains(e.target) && e.target !== btnBuscarSku && e.target !== inputBuscaSku) {
+                listaResultadosSku.style.display = 'none';
+            }
+        });
+
+        // --- FUNÇÃO PARA ABRIR O MODAL DE EXCLUSÃO ---
+        window.confirmarExclusao = function(id, nome) {
+            // 1. Atualiza o texto do modal com o nome do item
+            document.getElementById('nomeItemExclusao').innerText = nome;
+            
+            // 2. Monta a URL correta dinamicamente
+            // O Django gera a URL base, e nós trocamos o '0' pelo ID real
+            let urlBase = "{% url 'apuracao_grade:item-delete' 0 %}";
+            let urlFinal = urlBase.replace('0', id);
+            
+            // 3. Define a ação do formulário
+            document.getElementById('formExcluirItem').action = urlFinal;
+            
+            // 4. Abre o modal (Usando jQuery que já sabemos que funciona no seu tema)
+            $('#modalExcluirItem').modal('show');
+        };
+
+        // 2. REABERTURA DE MODAL EM CASO DE ERRO (BACKEND)
+        {% if modal_open %}
+            // Tenta via jQuery que é o fallback universal
+            if (window.jQuery) {
+                window.jQuery('#modalNovoItem').modal('show');
+            } else {
+                // Tenta Bootstrap 5
+                try {
+                    new bootstrap.Modal(document.getElementById('modalNovoItem')).show();
+                } catch(e) { console.error("Falha ao reabrir modal", e); }
+            }
+        {% endif %}
+
+        // --- VARIÁVEIS GLOBAIS DA DISTRIBUIÇÃO ---
+    let currentItemId = null;
+    let volumeTotalItem = 0;
+
+    // 1. ABRIR MODAL
+    // No início do script
+    const gradeStatus = "{{ grade.status }}"; 
+
+    window.abrirDistribuicao = function(itemId) {
+        currentItemId = itemId;
+        $('#modalDistribuicao').modal('show');
+        
+        // --- DESTRAVADO: Sempre mostra título padrão e botão salvar ---
+        document.querySelector('#modalDistribuicao .modal-title').innerText = 'Distribuição por Associado';
+        const btnSalvar = document.querySelector('#modalDistribuicao .btn-primary');
+        if(btnSalvar) btnSalvar.style.display = 'block';
+
+        const tbody = document.getElementById('tbody-distribuicao');
+        tbody.innerHTML = '<tr><td colspan="3" class="text-center">Carregando...</td></tr>';
+
+        // URL da View
+        let url = "{% url 'apuracao_grade:item-distribuicao' 0 %}".replace('0', itemId);
+
+        fetch(url)
+            .then(r => r.json())
+            .then(data => {
+                volumeTotalItem = parseFloat(data.item_volume);
+                document.getElementById('dist-vol-total').innerText = volumeTotalItem.toLocaleString('pt-BR');
+                renderizarTabelaDistribuicao(data.lojas);
+                calcularTotaisDistribuicao();
+            })
+            .catch(err => {
+                console.error(err);
+                tbody.innerHTML = '<tr><td colspan="3" class="text-danger text-center">Erro ao carregar dados.</td></tr>';
+            });
+    }; 
+
+    // 2. RENDERIZAR TABELA
+    function renderizarTabelaDistribuicao(lojas) {
+        const tbody = document.getElementById('tbody-distribuicao');
+        tbody.innerHTML = '';
+
+        lojas.forEach(loja => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>
+                    <span class="fw-bold text-dark">${loja.associado_nome}</span>
+                    <input type="hidden" class="loja-id" value="${loja.associado_id}">
+                    <input type="hidden" class="loja-nome" value="${loja.associado_nome}">
+                </td>
+                <td>
+                    <div class="input-group input-group-sm">
+                        <input type="number" class="form-control input-perc" 
+                               value="${loja.percentual_participacao}" step="0.01" min="0" max="100"
+                               onchange="aoMudarPercentual(this)">
+                        <span class="input-group-text">%</span>
+                    </div>
+                </td>
+                <td>
+                    <input type="number" class="form-control form-control-sm input-vol" 
+                           value="${loja.volume_compra_minima}" step="0.01" min="0"
+                           onchange="aoMudarVolume(this)">
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    // 3. CÁLCULOS DINÂMICOS
+    window.aoMudarPercentual = function(input) {
+        const row = input.closest('tr');
+        const inputVol = row.querySelector('.input-vol');
+        const perc = parseFloat(input.value) || 0;
+        const novoVol = volumeTotalItem * (perc / 100);
+        inputVol.value = novoVol.toFixed(2);
+        calcularTotaisDistribuicao();
+    };
+
+    window.aoMudarVolume = function(input) {
+        const row = input.closest('tr');
+        const inputPerc = row.querySelector('.input-perc');
+        const vol = parseFloat(input.value) || 0;
+        if (volumeTotalItem > 0) {
+            const novoPerc = (vol / volumeTotalItem) * 100;
+            inputPerc.value = novoPerc.toFixed(2);
+        }
+        calcularTotaisDistribuicao();
+    };
+
+    // 4. ATUALIZAR TOTAIS
+    function calcularTotaisDistribuicao() {
+        let somaVolume = 0;
+        document.querySelectorAll('.input-vol').forEach(inp => {
+            somaVolume += parseFloat(inp.value) || 0;
+        });
+
+        const elSoma = document.getElementById('dist-vol-soma');
+        const elStatus = document.getElementById('dist-status');
+        
+        elSoma.innerText = somaVolume.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+
+        const diferenca = Math.abs(somaVolume - volumeTotalItem);
+        if (diferenca < 0.1) {
+            elStatus.className = 'badge bg-success';
+            elStatus.innerText = 'Total Batido (100%)';
+        } else if (somaVolume > volumeTotalItem) {
+            elStatus.className = 'badge bg-danger';
+            elStatus.innerText = 'Excedeu o Total!';
+        } else {
+            elStatus.className = 'badge bg-warning text-dark';
+            elStatus.innerText = 'Falta Distribuir';
+        }
+    }
+
+    // --- LÓGICA DE EDIÇÃO DE ITEM ---
+    
+    // 1. Função chamada pelo botão da tabela
+    window.prepararEdicaoItem = function(itemId) {
+        // Muda título do modal
+        document.querySelector('#modalNovoItem .modal-title').innerText = 'Editar Agrupamento #' + itemId;
+        
+        // Define a URL de Ação do Form para a rota de UPDATE
+        const form = document.getElementById('form-item');
+        let urlEdicao = "{% url 'apuracao_grade:item-update' 0 %}".replace('0', itemId);
+        form.action = urlEdicao;
+
+        // Abre o modal
+        $('#modalNovoItem').modal('show');
+        
+        // Busca os dados atuais para preencher
+        fetch(`{% url 'apuracao_grade:api-obter-item' 0 %}`.replace('0', itemId))
+            .then(r => r.json())
+            .then(data => {
+                // Preenche campos simples
+                document.getElementById('id_descricao_resumida').value = data.descricao_resumida;
+                document.getElementById('id_unidade_medida').value = data.unidade_medida;
+                document.getElementById('id_quantidade_embalagem').value = data.quantidade_embalagem;
+                document.getElementById('id_volume_negociado').value = data.volume_negociado;
+                document.getElementById('id_custo_bruto').value = data.custo_bruto;
+                document.getElementById('id_custo_liquido').value = data.custo_liquido;
+                document.getElementById('id_verba_sell_in').value = data.verba_sell_in;
+                document.getElementById('id_desconto_boleto').value = data.desconto_boleto;
+
+                // Preenche os SKUs (variável global skusSelecionados que criamos ontem)
+                skusSelecionados = data.skus; 
+                atualizarSkusVisuais(); // Chama a função visual que já existe
+            });
+    };
+
+    // 2. IMPORTANTE: Resetar o modal para "Modo Criação" quando clicar em "Adicionar Item"
+    // Adicione um ID ou onclick no botão principal "Adicionar Item" lá em cima
+    const btnNovo = document.querySelector('[data-bs-target="#modalNovoItem"]');
+    if(btnNovo) {
+        btnNovo.addEventListener('click', function() {
+            document.querySelector('#modalNovoItem .modal-title').innerText = 'Adicionar Novo Agrupamento';
+            document.getElementById('form-item').action = ""; // Vazio = Post na URL atual (Create)
+            document.getElementById('form-item').reset(); // Limpa inputs
+            skusSelecionados = []; // Limpa array de SKUs
+            atualizarSkusVisuais(); // Limpa visual
+        });
+    }
+
+
+
+    // 5. SALVAR
+    window.salvarDistribuicao = function() {
+        const btn = document.querySelector('#modalDistribuicao .btn-primary');
+        const textoOriginal = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = 'Salvando...';
+
+        let dadosParaSalvar = [];
+        document.querySelectorAll('#tbody-distribuicao tr').forEach(tr => {
+            dadosParaSalvar.push({
+                id: tr.querySelector('.loja-id').value,
+                nome: tr.querySelector('.loja-nome').value,
+                percentual: tr.querySelector('.input-perc').value,
+                volume: tr.querySelector('.input-vol').value
+            });
+        });
+
+        let url = "{% url 'apuracao_grade:item-distribuicao' 0 %}".replace('0', currentItemId);
+
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({ lojas: dadosParaSalvar })
+        })
+        .then(r => r.json())
+        .then(resp => {
+            if(resp.status === 'ok') {
+                $('#modalDistribuicao').modal('hide');
+                
+                // MUDANÇA AQUI: Recarrega a página para atualizar os ícones de status
+                location.reload(); 
+                
+            } else {
+                alert('Erro ao salvar: ' + resp.message);
+                btn.disabled = false;
+                btn.innerHTML = textoOriginal;
+            }
+        })
+        .finally(() => {
+            btn.disabled = false;
+            btn.innerHTML = textoOriginal;
+        });
+    };
+
+    window.finalizarGrade = function() {
+        if(!confirm("Tem certeza que deseja finalizar esta grade?\nIsso validará se todos os volumes foram distribuídos.")) {
+            return;
+        }
+
+        const btn = document.querySelector('.btn-success'); // Seleciona o botão verde
+        const textoOriginal = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Validando...';
+
+        // Chama a View de Finalização
+        const url = "{% url 'apuracao_grade:grade-finalizar' grade.id %}";
+
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        })
+        .then(r => r.json())
+        .then(resp => {
+            if(resp.status === 'ok') {
+                alert(resp.message);
+                window.location.reload(); // Recarrega para bloquear a tela
+            } else {
+                // Mostra o erro (lista de itens pendentes)
+                alert("Não foi possível finalizar:\n\n" + resp.message);
+                btn.disabled = false;
+                btn.innerHTML = textoOriginal;
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert("Erro de comunicação com o servidor.");
+            btn.disabled = false;
+            btn.innerHTML = textoOriginal;
+        });
+    };
+
+    window.recalcularDistribuicao = function() {
+        if (!confirm("Tem certeza? Isso vai apagar as edições atuais e trazer os percentuais do histórico novamente.")) {
+            return;
+        }
+
+        const tbody = document.getElementById('tbody-distribuicao');
+        tbody.innerHTML = '<tr><td colspan="3" class="text-center"><span class="spinner-border spinner-border-sm"></span> Recalculando...</td></tr>';
+
+        // Adiciona o parametro ?reset=true na URL
+        let url = "{% url 'apuracao_grade:item-distribuicao' 0 %}".replace('0', currentItemId) + "?reset=true";
+
+        fetch(url)
+            .then(r => r.json())
+            .then(data => {
+                // Mesma lógica de sucesso do abrirDistribuicao
+                volumeTotalItem = parseFloat(data.item_volume);
+                document.getElementById('dist-vol-total').innerText = volumeTotalItem.toLocaleString('pt-BR');
+                renderizarTabelaDistribuicao(data.lojas);
+                calcularTotaisDistribuicao();
+                
+                // Feedback visual rápido
+                // alert("Valores recalculados com base no histórico!"); (Opcional)
+            })
+            .catch(err => {
+                console.error(err);
+                tbody.innerHTML = '<tr><td colspan="3" class="text-danger text-center">Erro ao recalcular.</td></tr>';
+            });
+    };
+
+    });
+</script>
+{% endblock %}

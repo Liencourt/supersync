@@ -67,3 +67,4 @@ dist/
 *.key
 *.crt
 credentials.json
+credenciais.json

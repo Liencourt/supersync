@@ -1,0 +1,207 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Usuários do Sistema | Super Sync{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box">
+            <div class="page-title-right">
+                <a href="{% url 'usuarios:cadastro-usuario' %}" class="btn btn-primary shadow-sm">
+                    <i class="ti ti-user-plus me-1"></i> Novo Usuário
+                </a>
+            </div>
+            <h4 class="page-title">Gerenciar Usuários</h4>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-3">
+    <div class="col-md-5 col-xl-4">
+        <form method="GET" action=".">
+            <div class="input-group shadow-sm">
+                <span class="input-group-text bg-white border-end-0"><i class="ti ti-search"></i></span>
+                <input type="text" name="q" class="form-control border-start-0" 
+                       placeholder="Buscar por Nome ou Login..." 
+                       value="{{ search_term }}">
+                <button class="btn btn-primary" type="submit">Buscar</button>
+                {% if search_term %}
+                    <a href="{% url 'usuarios:listar-usuarios' %}" class="btn btn-outline-secondary"><i class="ti ti-x"></i></a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-centered table-nowrap table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Usuário</th>
+                                <th>Login</th>
+                                <th>Função / Perfil</th>
+                                <th>Status</th>
+                                <th>Último Acesso</th>
+                                <th class="text-end" style="width: 120px;">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for u in usuarios %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-sm me-2">
+                                            <span class="avatar-title rounded-circle bg-primary-subtle text-primary fw-bold font-14">
+                                                {{ u.name|slice:":2"|upper }}
+                                            </span>
+                                        </div>
+                                        <div>
+                                            <h5 class="font-14 my-0 fw-normal">{{ u.name }}</h5>
+                                            <span class="text-muted font-12">{{ u.email|default:"Sem e-mail" }}</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td><span class="font-13 fw-bold">{{ u.username }}</span></td>
+                                <td>
+                                    {% if u.is_superuser %}
+                                        <span class="badge bg-danger">Super Admin</span>
+                                    {% elif u.is_staff %}
+                                        <span class="badge bg-info">Equipe TI</span>
+                                    {% endif %}
+                                    
+                                    {% if u.perfil.eh_comprador %}
+                                        <span class="badge bg-warning text-dark border border-warning">
+                                            <i class="ti ti-shopping-cart me-1"></i>Comprador
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-light text-dark border">Administrativo</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if u.is_active %}
+                                        <span class="badge badge-success-lighten">Ativo</span>
+                                    {% else %}
+                                        <span class="badge badge-danger-lighten">Inativo</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if u.last_login %}
+                                        {{ u.last_login|date:"d/m/Y H:i" }}
+                                    {% else %}
+                                        <span class="text-muted small">Nunca acessou</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    <a href="{% url 'usuarios:editar-usuario' u.pk %}" class="btn btn-sm btn-info me-1" title="Editar">
+                                        <i class="ti ti-edit"></i>
+                                    </a>
+                                    
+                                    {% if u.pk != user.pk %}
+                                        
+                                        {% if u.is_active %}
+                                            <a href="{% url 'usuarios:toggle-status' u.pk %}" class="btn btn-sm btn-light text-danger" title="Desativar Usuário"
+                                               onclick="return confirm('Tem certeza que deseja DESATIVAR o acesso de {{ u.name }}?');">
+                                                <i class="ti ti-lock"></i>
+                                            </a>
+                                        {% else %}
+                                            <a href="{% url 'usuarios:toggle-status' u.pk %}" class="btn btn-sm btn-light text-success" title="Ativar Usuário"
+                                               onclick="return confirm('Reativar o acesso de {{ u.name }}?');">
+                                                <i class="ti ti-lock-open"></i>
+                                            </a>
+                                        {% endif %}
+
+                                        <button type="button" class="btn btn-sm btn-light text-danger" 
+                                                onclick="confirmarExclusaoUsuario('{{ u.pk }}', '{{ u.name }}')"
+                                                title="Excluir Permanentemente">
+                                            <i class="ti ti-trash"></i>
+                                        </button>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center py-5 text-muted">
+                                    <i class="ti ti-users font-24 d-block mb-2"></i>
+                                    Nenhum usuário encontrado.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            {% if is_paginated %}
+            <div class="card-footer bg-white border-top-0 py-3">
+                <nav>
+                    <ul class="pagination justify-content-center mb-0">
+                        {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}&q={{ search_term }}">&laquo;</a>
+                        </li>
+                        {% endif %}
+                        <li class="page-item disabled">
+                            <span class="page-link">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+                        </li>
+                        {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}&q={{ search_term }}">&raquo;</a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalExcluirUsuario" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body text-center p-4">
+                <div class="text-danger display-4 mb-3">
+                    <i class="ti ti-trash"></i>
+                </div>
+                <h3 class="mb-2">Excluir Usuário?</h3>
+                <p class="text-muted">
+                    Você vai apagar <strong><span id="spanNomeUsuario"></span></strong>.<br>
+                    Se ele tiver grades vinculadas, o campo "Comprador" ficará vazio.<br>
+                    <span class="fw-bold text-danger">Essa ação não pode ser desfeita!</span>
+                </p>
+                
+                <form method="post" id="formExcluirUsuario" action="">
+                    {% csrf_token %}
+                    <div class="d-flex justify-content-center gap-2 mt-4">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-danger px-4">Sim, Excluir</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_javascript %}
+<script>
+    function confirmarExclusaoUsuario(pk, nome) {
+        // Atualiza o nome no modal
+        document.getElementById('spanNomeUsuario').innerText = nome;
+        
+        // Monta a URL correta substituindo o placeholder
+        let urlBase = "{% url 'usuarios:excluir-usuario' 'USER_PK' %}";
+        let urlFinal = urlBase.replace('USER_PK', pk);
+        
+        document.getElementById('formExcluirUsuario').action = urlFinal;
+        
+        // Abre o modal (Bootstrap 5)
+        new bootstrap.Modal(document.getElementById('modalExcluirUsuario')).show();
+    }
+</script>
+{% endblock %}
