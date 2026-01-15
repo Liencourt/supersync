@@ -164,7 +164,8 @@ if IS_CLOUD_RUN:
     # Lista de domínios confiáveis (Cloud Run)
     CSRF_TRUSTED_ORIGINS = [
         'https://supersync-teste-935499891935.southamerica-east1.run.app', 
-        # Adicione seu domínio personalizado aqui no futuro se tiver
+        'https://supersync-teste.web.app/',
+        'https://gestao.redesupermarket.com.br',
     ]
 else:
     # --- CONFIGURAÇÕES LOCAIS (Seu PC) ---
