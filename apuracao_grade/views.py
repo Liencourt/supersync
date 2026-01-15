@@ -20,6 +20,9 @@ from datetime import datetime
 import openpyxl
 from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
 from google.cloud import bigquery
+import os
+from google.oauth2 import service_account # Precisa disso para ler o JSON
+
 
 try:
     from gcp_services.services import bigquery_client
@@ -134,23 +137,45 @@ class GradeListView(LoginRequiredMixin, ListView):
         context = super().get_context_data(**kwargs)
         context['search_term'] = self.request.GET.get('q', '')
         return context
-
-# --- API AJAX PARA O BIGQUERY ---
+    
 def buscar_fornecedores_api(request):
     """
-    Recebe ?term=ABC e busca no BigQuery.
+    Versão HÍBRIDA:
+    1. Tenta usar Autenticação Automática (Cloud Run).
+    2. Se der erro, tenta usar o arquivo 'credenciais.json' (Local).
     """
     termo = request.GET.get('term', '').upper().strip()
-    
-    # Remove pontuação para busca flexível de CNPJ
     termo_limpo = termo.replace('.', '').replace('/', '').replace('-', '')
     
     if len(termo) < 3:
         return JsonResponse([], safe=False)
 
-    if not bigquery_client:
-        return JsonResponse([{'id': '0', 'text': 'ERRO: BigQuery Client (gcp_services) não encontrado'}], safe=False)
-    
+    client = None
+
+    # --- BLOCO DE CONEXÃO INTELIGENTE ---
+    try:
+        # TENTATIVA 1: Modo Nuvem (Automático)
+        # O Google tenta achar a credencial sozinho.
+        client = bigquery.Client()
+    except Exception as e:
+        print(f"Modo Nuvem falhou, tentando modo Local... Erro: {e}")
+        
+        # TENTATIVA 2: Modo Local (Arquivo JSON)
+        try:
+            # Ajuste o caminho se seu arquivo estiver em outra pasta
+            caminho_json = 'credenciais.json' 
+            
+            if os.path.exists(caminho_json):
+                credentials = service_account.Credentials.from_service_account_file(caminho_json)
+                client = bigquery.Client(credentials=credentials)
+            else:
+                return JsonResponse([{'id': 0, 'text': 'Erro: credenciais.json não encontrado'}], safe=False)
+        except Exception as e_local:
+             return JsonResponse([{'id': 0, 'text': f'Erro Fatal Auth: {str(e_local)}'}], safe=False)
+
+    # --- FIM DO BLOCO DE CONEXÃO ---
+
+    # Query SQL
     tabela_fornecedores = "`singular-ray-422121`.gold.dim_fornecedor" 
     
     sql = f"""
@@ -167,56 +192,39 @@ def buscar_fornecedores_api(request):
             OR REPLACE(REPLACE(REPLACE(cnpj_completo, '.', ''), '/', ''), '-', '') LIKE '%{termo_limpo}%'
             OR CAST(SEQREDE AS STRING) LIKE '%{termo}%'
            )
-        LIMIT 200
+        LIMIT 50
     """
-    
 
     try:
-        dados = bigquery_client.run_query(sql) 
-        
-        if dados is None:
-             return JsonResponse([], safe=False)
+        query_job = client.query(sql)
+        dados = query_job.result()
         
         resultados = []
-        ids_processados = set() # <--- NOVO: Controle de duplicidade
+        ids_processados = set()
         
         for linha in dados:
-            # Pegamos o ID original
             raw_id = linha.get('id')
+            seq = str(raw_id) if raw_id is not None else "0"
             
-            # Tratamento de ID (como já estava)
-            try:
-                seq = int(raw_id) if raw_id is not None else 0
-            except (ValueError, TypeError):
-                seq = raw_id 
-            
-            # --- LÓGICA DE FILTRO (NOVO) ---
-            # Se já processamos esse ID, pula para o próximo registro
             if seq in ids_processados:
                 continue
-                
-            # Se não, adiciona ao conjunto de processados
             ids_processados.add(seq)
-            # -------------------------------
 
             grupo = linha.get('grupo') or 'SEM NOME'
-            cnpj = linha.get('cnpj') or ''
             razao = linha.get('razao') or ''
+            
+            texto_exibicao = f"{grupo} | {razao}" if razao else grupo
             
             resultados.append({
                 'id': seq,
-                'text': grupo,
-                'cnpj': cnpj,
-                'razao': razao
+                'text': texto_exibicao
             })
              
         return JsonResponse(resultados, safe=False)
 
     except Exception as e:
-        print(f"ERRO CRÍTICO NA API: {e}")
-        # Retorna o erro no JSON para você ver no navegador/console network
         return JsonResponse([{'id': 0, 'text': f'Erro SQL: {str(e)}'}], safe=False)
-    
+        
 class GradeDetalheView(LoginRequiredMixin, DetailView):
     model = Grade
     template_name = 'apuracao_grade/grade_detalhe.html'
