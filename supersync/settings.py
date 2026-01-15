@@ -16,6 +16,7 @@ from dotenv import load_dotenv
 from google.cloud.sql.connector import Connector
 import bcrypt
 import dj_database_url
+from dotenv import load_dotenv
 
 load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -113,24 +114,41 @@ WSGI_APPLICATION = 'supersync.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+# --- CONFIGURAÇÃO DE BANCO DE DADOS INTELIGENTE ---
+
+# 1. Configuração Padrão (SQLite)
+# Isso garante que o comando 'collectstatic' ou testes rodem sem erro mesmo sem banco
 DATABASES = {
-    # 1. Padrão: SQLite (Funciona no seu PC e no Cloud Run sem configurar nada extra)
-       'default': {
-       'ENGINE': 'django.db.backends.sqlite3',
-       'NAME': BASE_DIR / 'db.sqlite3',
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
 
-#DATABASES = {
-#    'default': {
-#        'ENGINE': 'django.db.backends.postgresql',
-#        'NAME': os.getenv('DB_NAME', 'sync'), 
-#        'USER': os.getenv('DB_USER', 'postgres'),  
-#        'PASSWORD': os.getenv('DB_PASSWORD', '13752738'),
-#        'HOST': os.getenv('DB_HOST', 'localhost'),
-#        'PORT': os.getenv('DB_PORT', '5432'),
-#    }
-#}
+# 2. Verifica se existe uma DATABASE_URL (Nuvem ou .env)
+# O Cloud Run preenche isso automaticamente.
+database_url = os.getenv('DATABASE_URL')
+
+if database_url:
+    # Se achou a URL (Nuvem), substitui a configuração do SQLite pelo Postgres
+    DATABASES['default'] = dj_database_url.config(
+        default=database_url,
+        conn_max_age=600,
+        ssl_require=True # Geralmente necessário para Cloud SQL
+    )
+else:
+   
+    if os.getenv('USAR_POSTGRES_LOCAL') == 'True':
+         DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.postgresql',
+                'NAME': 'sync',
+                'USER': 'postgres',
+                'PASSWORD': os.getenv('DB_PASSWORD', '13752738'), # Sua senha aqui
+                'HOST': 'localhost',
+                'PORT': '5432',
+            }
+        }
 
 
 IS_CLOUD_RUN = os.getenv('K_SERVICE') is not None
