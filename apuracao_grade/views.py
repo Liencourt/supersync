@@ -1,5 +1,5 @@
 from django.views.decorators.http import require_POST
-from django.shortcuts import get_object_or_404, redirect
+from django.shortcuts import get_object_or_404, redirect,render
 from django.urls import reverse_lazy
 from django.views.generic import DetailView
 from django.contrib import messages
@@ -7,7 +7,7 @@ from django.contrib.messages.views import SuccessMessageMixin
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 from .models import Evento,Grade,GradeGrupo, ItemGrade, ItemGradeSKU,ItemGradeDistribuicao
-from .forms import GradeForm, ItemGradeForm,EventoForm
+from .forms import GradeForm, ItemGradeForm,EventoForm,GradeHeaderForm
 from django.http import JsonResponse
 from django.urls import reverse
 from django.db import transaction,connection
@@ -1001,3 +1001,54 @@ def api_criar_evento_modal(request):
             return JsonResponse({'status': 'erro', 'errors': form.errors}, status=400)
             
     return JsonResponse({'status': 'erro', 'message': 'Método não permitido'}, status=405)
+
+def editar_cabecalho_grade(request, grade_id):
+    grade = get_object_or_404(Grade, pk=grade_id)
+    
+    if request.method == 'POST':
+        form = GradeHeaderForm(request.POST, instance=grade)
+        if form.is_valid():
+            try:
+                with transaction.atomic():
+                    # 1. Salva os dados normais da Grade (Datas, Obs, Evento)
+                    grade_salva = form.save()
+
+                    # 2. Atualiza os Grupos (Apaga os antigos e cria os novos)
+                    grupos_str = form.cleaned_data.get('grupos_json')
+                    
+                    if grupos_str:
+                        # Se veio dado novo, substituímos
+                        grupos_list = json.loads(grupos_str)
+                        
+                        # Limpa os atuais
+                        grade_salva.grupos.all().delete()
+                        
+                        # Cria os novos
+                        for item in grupos_list:
+                            GradeGrupo.objects.create(
+                                grade=grade_salva,
+                                grupo_id=item['id'],
+                                grupo_nome=item['text'] # ou item['nome'] dependendo do seu JS
+                            )
+                            
+                messages.success(request, 'Cabeçalho e Fornecedores atualizados com sucesso!')
+                return redirect('apuracao_grade:grade-detalhe', pk=grade.id) # Ajuste para sua URL correta
+                
+            except Exception as e:
+                messages.error(request, f"Erro ao salvar grupos: {e}")
+    else:
+        form = GradeHeaderForm(instance=grade)
+    
+    # --- PREPARAÇÃO PARA O TEMPLATE ---
+    # Precisamos mandar os grupos atuais para o JavaScript pré-carregar no Select2
+    grupos_atuais = []
+    for g in grade.grupos.all():
+        grupos_atuais.append({'id': g.grupo_id, 'text': g.grupo_nome})
+    
+    grupos_json_inicial = json.dumps(grupos_atuais)
+
+    return render(request, 'apuracao_grade/editar_cabecalho.html', {
+        'form': form, 
+        'grade': grade,
+        'grupos_json_inicial': grupos_json_inicial # Manda pro template
+    })

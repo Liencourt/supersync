@@ -17,7 +17,13 @@
                 
                 <div class="mb-3">
                     <label class="text-muted small">Comprador</label>
-                    <div class="fw-bold">{{ grade.comprador_responsavel }}</div>
+                    <div class="fw-bold">
+                        {% if grade.comprador %}
+                            {{ grade.comprador.get_full_name|default:grade.comprador.name }}
+                        {% else %}
+                            {{ grade.comprador_responsavel|default:"-" }}
+                        {% endif %}
+                    </div>
                 </div>
                 
                 <div class="mb-3">

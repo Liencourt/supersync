@@ -96,11 +96,24 @@
                                     {% endif %}
                                 </td>
                                 <td class="text-end pe-3">
-                                    <a href="{% url 'apuracao_grade:grade-dashboard' grade.id %}" class="btn btn-sm btn-outline-primary me-1" title="Dashboard">
+                                    <a href="{% url 'apuracao_grade:grade-dashboard' grade.id %}" 
+                                    class="btn btn-sm btn-outline-primary me-1" 
+                                    data-bs-toggle="tooltip"
+                                    title="Dashboard">
                                         <i class="ti ti-chart-bar"></i>
                                     </a>
-                                    <a href="{% url 'apuracao_grade:grade-detalhe' grade.id %}" class="btn btn-sm btn-info" title="Editar">
-                                        <i class="ti ti-edit"></i>
+                                    <a href="{% url 'apuracao_grade:grade-detalhe' grade.id %}" 
+                                    class="btn btn-sm btn-info" 
+                                    data-bs-toggle="tooltip"
+                                    title="Adicionar Itens à Grade">
+                                        
+                                        <i class="ti ti-file-plus"></i>
+                                    </a>
+                                    <a href="{% url 'apuracao_grade:editar_cabecalho_grade' grade.id %}" 
+                                        class="btn btn-sm btn-outline-primary"
+                                        data-bs-toggle="tooltip" 
+                                        title="Editar Cabeçalho e Fornecedores">
+                                    <i class="ti ti-pencil-exclamation"></i> 
                                     </a>
                                     <button type="button" class="btn btn-sm btn-light text-danger" 
                                             onclick="confirmarExclusaoGrade('{{ grade.id }}')"

@@ -119,3 +119,23 @@ class ItemGradeForm(forms.ModelForm):
             'verba_sell_in': forms.NumberInput(attrs={'class': 'form-control'}),
             'desconto_boleto': forms.NumberInput(attrs={'class': 'form-control'}),
         }
+
+class GradeHeaderForm(forms.ModelForm):
+    # Campo "fantasma" para receber o JSON do Select2 (igual na criação)
+    grupos_json = forms.CharField(widget=forms.HiddenInput(), required=False)
+
+    class Meta:
+        model = Grade
+        fields = ['evento', 'comprador', 'data_inicio', 'data_fim', 'observacoes', 'grupos_json']
+        
+        widgets = {
+            'data_inicio': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'data_fim': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'observacoes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'evento': forms.Select(attrs={'class': 'form-control form-select'}),
+            'comprador': forms.Select(attrs={'class': 'form-control form-select'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['evento'].label = "Evento Comercial"

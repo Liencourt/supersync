@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
+
+<style>
+    /* Garante que o dropdown tenha fundo branco sólido e fique por cima de tudo */
+    .select2-container--bootstrap-5 .select2-dropdown {
+        z-index: 9999; 
+        background-color: #fff;
+        border: 1px solid #ced4da;
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    }
+    
+    /* Remove as bolinhas chatas caso o tema não pegue de primeira */
+    .select2-results__options {
+        list-style: none !important;
+        padding-left: 0 !important;
+    }
+</style>
+{% endblock %}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">Editar Grade #{{ grade.id }}</h4>
+                </div>
+                
+                <div class="card-body">
+                    <form method="post" id="formEditarHeader">
+                        {% csrf_token %}
+                        {{ form.grupos_json }}
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Evento</label>
+                                {{ form.evento }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Grupo Econômico / Fornecedor</label>
+                                <select id="select_fornecedores" class="form-control" multiple="multiple"></select>
+                                <div class="form-text">Busque pelo nome ou CNPJ no GCP.</div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Comprador</label>
+                                {{ form.comprador }}
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Início</label>
+                                {{ form.data_inicio }}
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Fim</label>
+                                {{ form.data_fim }}
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Observações</label>
+                            {{ form.observacoes }}
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2 border-top pt-3">
+                            <a href="{% url 'apuracao_grade:grade-detalhe' grade.id %}" class="btn btn-outline-secondary">Cancelar</a>
+                            <button type="submit" class="btn btn-success">Salvar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 1. Carrega os dados iniciais vindos da View
+    var gruposAtuais = {{ grupos_json_inicial|safe }};
+    var $select = $('#select_fornecedores');
+    
+    // Inicializa Select2 com AJAX
+    $select.select2({
+        theme: 'bootstrap-5', // ou 'bootstrap4' dependendo do seu tema
+        placeholder: "Digite para buscar no GCP...",
+        minimumInputLength: 3,
+        ajax: {
+            url: '{% url "apuracao_grade:api-buscar-fornecedores" %}', 
+        
+            dataType: 'json',
+            delay: 250,
+            data: function (params) {
+                return { term: params.term };
+            },
+            processResults: function (data) {
+                return { results: data };
+            }
+        }
+    });
+
+    // 2. Pré-seleciona os valores que já existem no banco
+    if (gruposAtuais && gruposAtuais.length > 0) {
+        gruposAtuais.forEach(function(g) {
+            // Cria a opção se ela não existir
+            var option = new Option(g.text, g.id, true, true);
+            $select.append(option).trigger('change');
+        });
+    }
+
+    // 3. Antes de enviar o form, copia os dados do Select2 para o campo Hidden
+    $('#formEditarHeader').on('submit', function() {
+        var dadosSelecionados = $select.select2('data'); // Pega objetos {id, text}
+        
+        // Formata apenas o necessário para o Python
+        var dadosLimpos = dadosSelecionados.map(function(item) {
+            return { id: item.id, text: item.text };
+        });
+        
+        // Joga no input hidden
+        $('[name="grupos_json"]').val(JSON.stringify(dadosLimpos));
+    });
+});
+</script>
+{% endblock %}

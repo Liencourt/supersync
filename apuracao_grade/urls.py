@@ -22,6 +22,7 @@ from .views import (
     api_criar_evento_modal,
 
 )
+from apuracao_grade import views
 
 app_name = 'apuracao_grade'
 
@@ -49,5 +50,6 @@ urlpatterns = [
     path('grades/<int:pk>/exportar/', exportar_grade_excel, name='grade-exportar'),
     path('api/dashboard/<int:pk>/', api_dashboard_apuracao, name='api-dashboard'),
     path('grades/<int:pk>/dashboard/', DashboardGradeView.as_view(), name='grade-dashboard'),
+    path('grade/<int:grade_id>/editar-cabecalho/', views.editar_cabecalho_grade, name='editar_cabecalho_grade'),
     
 ]
