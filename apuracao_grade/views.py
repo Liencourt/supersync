@@ -1075,3 +1075,21 @@ def editar_cabecalho_grade(request, grade_id):
         'grade': grade,
         'grupos_json_inicial': grupos_json_inicial # Manda pro template
     })
+
+# Adicione no topo
+from .distribuicao_service import executar_atualizacao_distribuicao
+
+# Adicione a função de View
+def atualizar_distribuicao_view(request):
+    """
+    Rota para forçar a atualização da tabela de distribuição via navegador.
+    """
+    if not request.user.is_superuser: # Segurança básica
+        return JsonResponse({'status': 'erro', 'msg': 'Apenas admin pode fazer isso.'}, status=403)
+
+    sucesso, mensagem = executar_atualizacao_distribuicao()
+    
+    if sucesso:
+        return JsonResponse({'status': 'ok', 'msg': mensagem})
+    else:
+        return JsonResponse({'status': 'erro', 'msg': mensagem}, status=500)

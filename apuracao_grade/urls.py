@@ -20,6 +20,7 @@ from .views import (
     DashboardGradeView,
     excluir_grade,
     api_criar_evento_modal,
+    atualizar_distribuicao_view
 
 )
 from apuracao_grade import views
@@ -52,4 +53,6 @@ urlpatterns = [
     path('grades/<int:pk>/dashboard/', DashboardGradeView.as_view(), name='grade-dashboard'),
     path('grade/<int:grade_id>/editar-cabecalho/', views.editar_cabecalho_grade, name='editar_cabecalho_grade'),
     
+
+    path('api/atualizar-distribuicao/', views.atualizar_distribuicao_view, name='api-atualizar-distribuicao'),
 ]
