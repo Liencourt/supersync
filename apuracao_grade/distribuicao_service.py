@@ -5,20 +5,18 @@ from dateutil.relativedelta import relativedelta
 from google.cloud import bigquery
 from sqlalchemy import create_engine
 from django.conf import settings
+from usuarios.models import Associado 
 
 def get_db_engine():
     """
     Cria uma engine SQLAlchemy corrigindo o bug do 'postgres://'
     """
-    # Pega a URL do banco
     db_url = os.getenv('DATABASE_URL')
     
     if not db_url:
         # Fallback local
         db_url = "postgresql://postgres:13752738@localhost:5432/sync"
     
-    # --- A CORREÇÃO MÁGICA ESTÁ AQUI ---
-    # Se a URL vier como 'postgres://', trocamos para 'postgresql://'
     if db_url and db_url.startswith("postgres://"):
         db_url = db_url.replace("postgres://", "postgresql://", 1)
         
@@ -70,6 +68,34 @@ def pivotableassociado(df):
     pivot = df_pivot_grupo.reset_index()
     return pivot
 
+def sincronizar_lojas(df_associado):
+    """
+    NOVIDADE 2: Pega a lista de lojas que veio do BigQuery e garante 
+    que elas existam na tabela de Associados do Django.
+    """
+    print("Sincronizando lojas encontradas no BigQuery com o Cadastro...")
+    try:
+        # Pega nomes únicos (removendo duplicados)
+        lojas_nomes = df_associado['NomeAssociado'].unique()
+        
+        cont_criadas = 0
+        for nome_loja in lojas_nomes:
+            if nome_loja:
+                nome_limpo = str(nome_loja).strip().upper()
+                # O Django get_or_create verifica se existe. Se não, cria.
+                obj, created = Associado.objects.get_or_create(
+                    nome=nome_limpo,
+                    defaults={'status': 'ATIVO'} # Se criar, já cria como ATIVO
+                )
+                if created:
+                    cont_criadas += 1
+        
+        print(f"Sincronização concluída. {cont_criadas} novas lojas cadastradas.")
+        return True
+    except Exception as e:
+        print(f"Erro ao sincronizar lojas: {e}")
+        return False
+
 def executar_atualizacao_distribuicao():
     """
     Função principal chamada pela View do Django
@@ -78,7 +104,7 @@ def executar_atualizacao_distribuicao():
     
     # 1. Conexão BigQuery (Blindada Híbrida)
     try:
-        client = bigquery.Client() # Tenta Cloud Run (Automático)
+        client = bigquery.Client() 
     except:
         from google.oauth2 import service_account
         if os.path.exists('credenciais.json'):
@@ -128,22 +154,17 @@ def executar_atualizacao_distribuicao():
     df_pivot['dataatualizacao'] = date.today()
     df_associado['dataatualizacao'] = date.today()
     
-    # Limpeza de colunas
     df_pivot.columns = [col.lower().strip().replace(" ","_") for col in df_pivot.columns]
     df_associado.columns = [col.lower().strip().replace(" ","_") for col in df_associado.columns]
 
-    # Gravação no Banco (Substitui to_sql antigo)
+    # --- NOVIDADE 3: Executar a sincronização das lojas ANTES de salvar ---
+    sincronizar_lojas(df) # Usamos o df original que tem a coluna NomeAssociado bruta
+
+    # Gravação no Banco
     try:
-        # Verifica se já existe (Lógica simplificada: Sempre atualiza as tabelas atuais)
-        # O user queria checar 'gradepercmov', podemos manter a lógica se quiser, 
-        # mas para simplificar vamos garantir que as tabelas de uso atual estejam atualizadas.
-        
         df_pivot.to_sql('gradepercatual', index=False, if_exists='replace', con=engine)
         df_associado.to_sql('gradepercatualassoc', index=False, if_exists='replace', con=engine)
         
-        # Opcional: Histórico
-        # df_pivot.to_sql('gradepercmov', index=False, if_exists='append', con=engine) 
-
-        return True, "Tabelas atualizadas com sucesso!"
+        return True, "Tabelas atualizadas e Lojas sincronizadas com sucesso!"
     except Exception as e:
         return False, f"Erro ao salvar no PostgreSQL: {str(e)}"
