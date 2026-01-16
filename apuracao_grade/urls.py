@@ -20,7 +20,8 @@ from .views import (
     DashboardGradeView,
     excluir_grade,
     api_criar_evento_modal,
-    atualizar_distribuicao_view
+    atualizar_distribuicao_view,
+    diagnostico_distribuicao,
 
 )
 from apuracao_grade import views
@@ -55,4 +56,5 @@ urlpatterns = [
     
 
     path('api/atualizar-distribuicao/', views.atualizar_distribuicao_view, name='api-atualizar-distribuicao'),
+    path('diagnostico-distribuicao/', views.diagnostico_distribuicao, name='diagnostico-distribuicao'),
 ]

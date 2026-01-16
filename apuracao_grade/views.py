@@ -23,6 +23,8 @@ from google.cloud import bigquery
 import os
 from google.oauth2 import service_account # Precisa disso para ler o JSON
 
+from .distribuicao_service import executar_atualizacao_distribuicao
+
 
 try:
     from gcp_services.services import bigquery_client
@@ -1076,8 +1078,6 @@ def editar_cabecalho_grade(request, grade_id):
         'grupos_json_inicial': grupos_json_inicial # Manda pro template
     })
 
-# Adicione no topo
-from .distribuicao_service import executar_atualizacao_distribuicao
 
 # Adicione a função de View
 def atualizar_distribuicao_view(request):
@@ -1093,3 +1093,45 @@ def atualizar_distribuicao_view(request):
         return JsonResponse({'status': 'ok', 'msg': mensagem})
     else:
         return JsonResponse({'status': 'erro', 'msg': mensagem}, status=500)
+
+def diagnostico_distribuicao(request):
+    """
+    Lista o que REALMENTE existe no banco de dados para descobrirmos
+    por que a tela não está exibindo.
+    """
+    html = "<h1>🕵️ Diagnóstico de Dados</h1>"
+
+    # 1. Verificar Lojas (Associado)
+    try:
+        qtd = Associado.objects.count()
+        # Pega as 5 primeiras para ver como o 'status' foi gravado
+        lojas = list(Associado.objects.all().values('id', 'nome', 'status')[:5]) 
+        html += f"<h3>1. Tabela Associado (Total: {qtd})</h3>"
+        html += f"<pre>Exemplos: {lojas}</pre>"
+        
+        # Teste do Filtro usado na tela
+        qtd_filtro = Associado.objects.filter(status='ATIVO').count()
+        html += f"<b>Teste do Filtro (status='ATIVO'):</b> Encontrou {qtd_filtro} lojas.<br>"
+        if qtd > 0 and qtd_filtro == 0:
+            html += "<span style='color:red'>⚠️ ALERTA: Existem lojas, mas o filtro de status está falhando! Verifique se é 'Ativo', 'A' ou True.</span>"
+
+    except Exception as e:
+        html += f"<p style='color:red'>Erro ao ler Associado: {e}</p>"
+
+    html += "<hr>"
+
+    # 2. Verificar Tabela de Percentuais (SQL Puro)
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT count(*) FROM gradepercatualassoc")
+            qtd_raw = cursor.fetchone()[0]
+            
+            cursor.execute("SELECT * FROM gradepercatualassoc LIMIT 3")
+            rows = cursor.fetchall()
+            
+        html += f"<h3>2. Tabela Raw gradepercatualassoc (Total: {qtd_raw})</h3>"
+        html += f"<pre>Exemplos: {rows}</pre>"
+    except Exception as e:
+        html += f"<p style='color:red'>Erro ao ler tabela SQL: {e}</p>"
+
+    return HttpResponse(html)
