@@ -391,22 +391,21 @@ def get_lojas_ativas():
 # 2. Função para buscar Histórico de % (Query SQL Direta)
 def get_sugestao_distribuicao():
     """
-    Busca o percentual de participação (percentual_qtd) da tabela de histórico
-    baseado no último trimestre/ano disponível.
+    Busca o histórico.
+    Protegido para não quebrar se a tabela/view não existir no banco.
     """
     sugestao = {}
     
-    # Query SQL: Pega o Ano Máximo -> Depois o Trimestre Máximo desse ano
-    # Assim garantimos que estamos pegando o dado mais recente do banco.
+    # Removemos o 'public.' para compatibilidade e adicionamos try/except robusto
     sql = """
         SELECT 
             UPPER(TRIM(nomeassociado)) as nome, 
-            SUM(percentual_qtd) as perc  -- Soma caso haja duplicidade de linhas por erro
-        FROM public.gradepercatualassoc 
+            SUM(percentual_qtd) as perc
+        FROM gradepercatualassoc 
         WHERE (ano, trimestre) IN (
             SELECT ano, MAX(trimestre) 
-            FROM public.gradepercatualassoc 
-            WHERE ano = (SELECT MAX(ano) FROM public.gradepercatualassoc)
+            FROM gradepercatualassoc 
+            WHERE ano = (SELECT MAX(ano) FROM gradepercatualassoc)
             GROUP BY ano
         )
         GROUP BY nomeassociado
@@ -417,19 +416,18 @@ def get_sugestao_distribuicao():
             cursor.execute(sql)
             rows = cursor.fetchall()
             
-            print(f"--- HISTÓRICO ENCONTRADO ({len(rows)} registros) ---")
-            
             for row in rows:
-                # row[0] = NOME (ex: "ALVORADA"), row[1] = PERCENTUAL (ex: 15.5)
                 nome = row[0]
-                # Garante que seja float e substitui None por 0
                 perc = float(row[1]) if row[1] is not None else 0.0
-                
                 sugestao[nome] = perc
-                print(f"   > {nome}: {perc}%")
                 
     except Exception as e:
-        print(f"❌ ERRO AO BUSCAR HISTÓRICO: {e}")
+        # Aqui capturamos o erro "relation does not exist" silenciosamente
+        # para permitir que a tela de distribuição abra mesmo sem histórico.
+        print(f"⚠️ AVISO: Não foi possível carregar histórico de distribuição.")
+        print(f"Erro detalhado: {e}")
+        # Retorna vazio, assim o sistema assume 0% para todos sem travar
+        return {}
     
     return sugestao
 
