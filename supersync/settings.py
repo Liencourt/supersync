@@ -166,6 +166,7 @@ if IS_CLOUD_RUN:
         'https://supersync-teste-935499891935.southamerica-east1.run.app', 
         'https://supersync-teste.web.app',
         'https://gestao.redesupermarket.com.br',
+        'https://supersync-teste-us-935499891935.us-central1.run.app'
     ]
 else:
     # --- CONFIGURAÇÕES LOCAIS (Seu PC) ---

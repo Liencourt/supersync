@@ -286,25 +286,39 @@ class GradeDetalheView(LoginRequiredMixin, DetailView):
         return self.render_to_response(context)
 
 
-# --- API DE PRODUTOS SIMPLIFICADA ---
 def buscar_produtos_api(request):
     """
     API para buscar produtos (SKUs) no BigQuery.
-    - Resolve busca por partes (ex: 'REF TANG' acha 'REFRESCO TANG')
-    - Retorna ID como inteiro.
+    Versão BLINDADA: Usa autenticação nativa (Cloud Run) ou arquivo local.
     """
     termo = request.GET.get('term', '').upper().strip()
     
     if len(termo) < 3:
         return JsonResponse([], safe=False)
     
-    if not bigquery_client:
-        return JsonResponse([], safe=False)
+    # --- 1. CONEXÃO HÍBRIDA (IGUAL À DE FORNECEDORES) ---
+    client = None
+    try:
+        # Tenta conectar automaticamente (Funciona no Cloud Run)
+        client = bigquery.Client()
+    except Exception as e:
+        # Se falhar, tenta o arquivo local (Funciona no seu PC)
+        try:
+            caminho_json = 'credenciais.json' 
+            if os.path.exists(caminho_json):
+                credentials = service_account.Credentials.from_service_account_file(caminho_json)
+                client = bigquery.Client(credentials=credentials)
+            else:
+                print("Erro: credenciais.json não encontrado para produtos")
+                return JsonResponse([], safe=False)
+        except Exception as e_local:
+            print(f"Erro Conexão Produtos: {e_local}")
+            return JsonResponse([], safe=False)
+    # ----------------------------------------------------
 
-    
+    # Prepara termo para busca (troca espaço por %)
     termo_smart = termo.replace(' ', '%')
 
-    
     tabela_produtos = "`singular-ray-422121`.landing_saerj.DIM_PRODUTOS" 
 
     sql = f"""
@@ -324,12 +338,13 @@ def buscar_produtos_api(request):
     """
     
     try:
-        dados = bigquery_client.run_query(sql)
-        if dados is None: return JsonResponse([], safe=False)
+        # Executa a query usando o cliente nativo
+        query_job = client.query(sql)
+        dados = query_job.result()
         
         resultados = []
         for linha in dados:
-            
+        
             try:
                 id_limpo = int(linha.get('id'))
             except:
@@ -341,8 +356,10 @@ def buscar_produtos_api(request):
             })
             
         return JsonResponse(resultados, safe=False)
+
     except Exception as e:
-        print(f"Erro API Produtos: {e}")
+        print(f"Erro API Produtos SQL: {e}")
+        # Retorna lista vazia em caso de erro para não quebrar o front
         return JsonResponse([], safe=False)
 
 @require_POST 
