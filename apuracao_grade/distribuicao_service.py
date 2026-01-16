@@ -8,15 +8,19 @@ from django.conf import settings
 
 def get_db_engine():
     """
-    Cria uma engine SQLAlchemy usando a mesma string de conexão do Django.
-    Funciona tanto Local (se tiver .env) quanto no Cloud Run.
+    Cria uma engine SQLAlchemy corrigindo o bug do 'postgres://'
     """
-    # Pega a URL do banco (ex: postgres://user:pass@host:5432/db)
+    # Pega a URL do banco
     db_url = os.getenv('DATABASE_URL')
     
     if not db_url:
-        # Fallback para local se não tiver variável de ambiente (ajuste sua senha se precisar)
+        # Fallback local
         db_url = "postgresql://postgres:13752738@localhost:5432/sync"
+    
+    # --- A CORREÇÃO MÁGICA ESTÁ AQUI ---
+    # Se a URL vier como 'postgres://', trocamos para 'postgresql://'
+    if db_url and db_url.startswith("postgres://"):
+        db_url = db_url.replace("postgres://", "postgresql://", 1)
         
     return create_engine(db_url)
 
